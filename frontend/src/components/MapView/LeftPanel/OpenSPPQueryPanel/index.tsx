@@ -23,7 +23,6 @@ import {
   CropFree,
 } from '@material-ui/icons';
 import { useDispatch, useSelector } from 'react-redux';
-import { useSafeTranslation } from 'i18n';
 import {
   opensppStatisticsSelector,
   opensppStatisticsLoadingSelector,
@@ -37,17 +36,15 @@ import {
   opensppSpatialResultSelector,
   opensppProximityResultSelector,
   opensppProximityParamsSelector,
-  opensppDrawnGeometrySelector,
-  opensppIsDrawingSelector,
   setQueryMode,
   toggleVariable,
   setProximityParams,
-  setIsDrawing,
   setDrawnGeometry,
   clearQueryResults,
   executeOpenSPPSpatialQuery,
   executeOpenSPPProximityQuery,
 } from 'context/opensppQueryStateSlice';
+import useMapDraw from 'utils/useMapDraw';
 import type {
   SpatialQueryResponse,
   ProximityQueryResponse,
@@ -109,7 +106,6 @@ const useStyles = makeStyles(() =>
 const OpenSPPQueryPanel = memo(() => {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const { t } = useSafeTranslation();
 
   const statistics = useSelector(opensppStatisticsSelector);
   const statisticsLoading = useSelector(opensppStatisticsLoadingSelector);
@@ -120,8 +116,7 @@ const OpenSPPQueryPanel = memo(() => {
   const spatialResult = useSelector(opensppSpatialResultSelector);
   const proximityResult = useSelector(opensppProximityResultSelector);
   const proximityParams = useSelector(opensppProximityParamsSelector);
-  const drawnGeometry = useSelector(opensppDrawnGeometrySelector);
-  const isDrawing = useSelector(opensppIsDrawingSelector);
+  const { isDrawing, drawnGeometry, startDrawing, stopDrawing } = useMapDraw();
 
   // Load statistics on mount
   useEffect(() => {
@@ -163,15 +158,23 @@ const OpenSPPQueryPanel = memo(() => {
   }, [dispatch]);
 
   const handleToggleDraw = useCallback(() => {
-    dispatch(setIsDrawing(!isDrawing));
-  }, [dispatch, isDrawing]);
+    if (isDrawing) {
+      stopDrawing();
+    } else {
+      startDrawing();
+    }
+  }, [isDrawing, startDrawing, stopDrawing]);
 
   const result: SpatialQueryResponse | ProximityQueryResponse | null =
     mode === 'area' ? spatialResult : proximityResult;
 
   const canRun = useMemo(() => {
-    if (loading) return false;
-    if (mode === 'area') return !!drawnGeometry;
+    if (loading) {
+      return false;
+    }
+    if (mode === 'area') {
+      return !!drawnGeometry;
+    }
     return proximityParams.lat !== null && proximityParams.lng !== null;
   }, [loading, mode, drawnGeometry, proximityParams]);
 
@@ -209,12 +212,12 @@ const OpenSPPQueryPanel = memo(() => {
           Statistics {statisticsLoading && <CircularProgress size={14} />}
         </Typography>
         <FormGroup className={classes.statsGroup}>
-          {statistics.map((category) => (
+          {statistics.map(category => (
             <Box key={category.code}>
               <Typography className={classes.categoryTitle}>
                 {category.name}
               </Typography>
-              {category.statistics.map((stat) => (
+              {category.statistics.map(stat => (
                 <FormControlLabel
                   key={stat.name}
                   control={
@@ -276,7 +279,7 @@ const OpenSPPQueryPanel = memo(() => {
             size="small"
             variant="outlined"
             value={proximityParams.lat ?? ''}
-            onChange={(e) =>
+            onChange={e =>
               dispatch(
                 setProximityParams({
                   lat: e.target.value ? Number(e.target.value) : null,
@@ -291,7 +294,7 @@ const OpenSPPQueryPanel = memo(() => {
             size="small"
             variant="outlined"
             value={proximityParams.lng ?? ''}
-            onChange={(e) =>
+            onChange={e =>
               dispatch(
                 setProximityParams({
                   lng: e.target.value ? Number(e.target.value) : null,
@@ -306,10 +309,8 @@ const OpenSPPQueryPanel = memo(() => {
             size="small"
             variant="outlined"
             value={proximityParams.radiusKm}
-            onChange={(e) =>
-              dispatch(
-                setProximityParams({ radiusKm: Number(e.target.value) }),
-              )
+            onChange={e =>
+              dispatch(setProximityParams({ radiusKm: Number(e.target.value) }))
             }
             inputProps={{ step: 1, min: 1, max: 500 }}
           />
@@ -317,7 +318,7 @@ const OpenSPPQueryPanel = memo(() => {
             <InputLabel>Relation</InputLabel>
             <Select
               value={proximityParams.relation}
-              onChange={(e) =>
+              onChange={e =>
                 dispatch(
                   setProximityParams({
                     relation: e.target.value as 'within' | 'beyond',
@@ -334,14 +335,12 @@ const OpenSPPQueryPanel = memo(() => {
       )}
 
       {/* Action buttons */}
-      <Box display="flex" gap="8px">
+      <Box display="flex" style={{ gap: '8px' }}>
         <Button
           variant="contained"
           color="primary"
           size="small"
-          startIcon={
-            loading ? <CircularProgress size={16} /> : <PlayArrow />
-          }
+          startIcon={loading ? <CircularProgress size={16} /> : <PlayArrow />}
           disabled={!canRun}
           onClick={handleRunQuery}
         >
@@ -358,9 +357,7 @@ const OpenSPPQueryPanel = memo(() => {
       </Box>
 
       {/* Error */}
-      {error && (
-        <Typography className={classes.error}>{error}</Typography>
-      )}
+      {error && <Typography className={classes.error}>{error}</Typography>}
 
       {/* Results */}
       {result && (

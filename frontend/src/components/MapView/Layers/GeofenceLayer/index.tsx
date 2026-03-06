@@ -7,13 +7,6 @@ import { getGeofence } from 'utils/openspp-api';
 import { FillLayerSpecification, LineLayerSpecification } from 'maplibre-gl';
 import { appConfig } from 'config';
 
-const GEOFENCE_TYPE_COLORS: Record<string, string> = {
-  hazard_zone: '#d32f2f',
-  service_area: '#1976d2',
-  targeting_area: '#388e3c',
-  custom: '#f9a825',
-};
-
 const fillPaint: FillLayerSpecification['paint'] = {
   'fill-opacity': 0.25,
   'fill-color': [
@@ -70,7 +63,7 @@ const GeofenceLayer = memo(({ before }: { before?: string }) => {
     const loadGeofences = async () => {
       try {
         const fullGeofences = await Promise.all(
-          geofences.map((gf) => getGeofence(gf.id)),
+          geofences.map(gf => getGeofence(gf.id)),
         );
         const features = fullGeofences
           .filter((gf: any) => gf.geometry)

@@ -37,6 +37,7 @@ import {
   WMSLayer,
 } from 'components/MapView/Layers';
 import GeojsonDataLayer from 'components/MapView/Layers/GeojsonDataLayer';
+import OpenSPPReportLayer from 'components/MapView/Layers/OpenSPPReportLayer';
 import AnticipatoryActionFloodLayer from 'components/MapView/Layers/AnticipatoryActionFloodLayer';
 import { MapExportLayoutProps } from './types';
 import { getAspectRatioDecimal } from './aspectRatioConstants';
@@ -81,6 +82,7 @@ const componentTypes: LayerComponentsMap<LayerType> = {
   anticipatory_action_flood: {
     component: AnticipatoryActionFloodLayer,
   },
+  openspp_report: { component: OpenSPPReportLayer },
 };
 
 function MapExportLayout({

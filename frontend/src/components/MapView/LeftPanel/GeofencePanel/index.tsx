@@ -31,12 +31,7 @@ import {
   createOpenSPPGeofence,
   deleteOpenSPPGeofence,
 } from 'context/opensppStateSlice';
-import {
-  opensppDrawnGeometrySelector,
-  opensppIsDrawingSelector,
-  setIsDrawing,
-  setDrawnGeometry,
-} from 'context/opensppQueryStateSlice';
+import useMapDraw from 'utils/useMapDraw';
 import type { GeofenceType } from 'utils/openspp-types';
 
 const GEOFENCE_TYPE_COLORS: Record<string, string> = {
@@ -103,8 +98,8 @@ const GeofencePanel = memo(() => {
   const dispatch = useDispatch();
   const geofences = useSelector(opensppGeofencesSelector);
   const loading = useSelector(opensppGeofencesLoadingSelector);
-  const drawnGeometry = useSelector(opensppDrawnGeometrySelector);
-  const isDrawing = useSelector(opensppIsDrawingSelector);
+  const { isDrawing, drawnGeometry, startDrawing, stopDrawing, clearDrawing } =
+    useMapDraw();
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [name, setName] = useState('');
@@ -123,7 +118,9 @@ const GeofencePanel = memo(() => {
   }, [dispatch]);
 
   const handleCreate = useCallback(async () => {
-    if (!name || !drawnGeometry) return;
+    if (!name || !drawnGeometry) {
+      return;
+    }
     setCreating(true);
     try {
       await dispatch(
@@ -138,7 +135,7 @@ const GeofencePanel = memo(() => {
       setDescription('');
       setGeofenceType('custom');
       setShowCreateForm(false);
-      dispatch(setDrawnGeometry(null));
+      clearDrawing();
     } finally {
       setCreating(false);
     }
@@ -153,8 +150,12 @@ const GeofencePanel = memo(() => {
   );
 
   const handleToggleDraw = useCallback(() => {
-    dispatch(setIsDrawing(!isDrawing));
-  }, [dispatch, isDrawing]);
+    if (isDrawing) {
+      stopDrawing();
+    } else {
+      startDrawing();
+    }
+  }, [isDrawing, startDrawing, stopDrawing]);
 
   return (
     <Box className={classes.root}>
@@ -183,7 +184,7 @@ const GeofencePanel = memo(() => {
             size="small"
             variant="outlined"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={e => setName(e.target.value)}
             required
           />
           <TextField
@@ -191,7 +192,7 @@ const GeofencePanel = memo(() => {
             size="small"
             variant="outlined"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={e => setDescription(e.target.value)}
             multiline
             rows={2}
           />
@@ -199,9 +200,7 @@ const GeofencePanel = memo(() => {
             <InputLabel>Type</InputLabel>
             <Select
               value={geofenceType}
-              onChange={(e) =>
-                setGeofenceType(e.target.value as GeofenceType)
-              }
+              onChange={e => setGeofenceType(e.target.value as GeofenceType)}
               label="Type"
             >
               {Object.entries(GEOFENCE_TYPE_LABELS).map(([value, label]) => (
@@ -251,7 +250,7 @@ const GeofencePanel = memo(() => {
       )}
 
       <Box className={classes.geofenceList}>
-        {geofences.map((gf) => (
+        {geofences.map(gf => (
           <Card key={gf.id} className={classes.card} variant="outlined">
             <CardContent className={classes.cardContent}>
               <Box

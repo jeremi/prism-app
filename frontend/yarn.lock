@@ -4204,6 +4204,7 @@ caniuse-lite@^1.0.30001759:
 
 "canvas@link:./node_modules/.cache/null":
   version "0.0.0"
+  uid ""
 
 canvg@^3.0.11:
   version "3.0.11"
@@ -10193,6 +10194,16 @@ systeminformation@^5.27.14:
   version "5.30.6"
   resolved "https://registry.yarnpkg.com/systeminformation/-/systeminformation-5.30.6.tgz#c100cb632bbb955fc44ba033f624da22c3a6a5be"
   integrity sha512-LEIyK1aEv5P3BhAPW3swdlIyCihxwEq/Gki+kcONieU4PIeRCSLDuGkk0Va/56PSBgjVgEksOM88dmY6YqOyfQ==
+
+terra-draw-maplibre-gl-adapter@^1.3.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/terra-draw-maplibre-gl-adapter/-/terra-draw-maplibre-gl-adapter-1.3.0.tgz#2b92ebf5f86451199b304c479b70903e94786dee"
+  integrity sha512-Q0Kds+IxLIcMPv3xYAJ3TDXp1Ml1uGk2xFN8Xx5tKpVdU9AhlTkpGxJ7i+Is1v6PC4t+O7MfyGP4Tl+R+qdYeQ==
+
+terra-draw@^1.25.0:
+  version "1.25.0"
+  resolved "https://registry.yarnpkg.com/terra-draw/-/terra-draw-1.25.0.tgz#b168334708479d3a3812ddbc4094c571e0b2895f"
+  integrity sha512-SQFdY6ObBqln01NFcYjrsVLPoAxHgl3fJszqU0pkDkxNIbV7FZUM102BcC2v9xXQ5Tr8hhnBELf1qG4GaXcALQ==
 
 test-exclude@^6.0.0:
   version "6.0.0"

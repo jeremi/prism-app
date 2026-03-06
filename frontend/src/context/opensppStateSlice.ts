@@ -2,7 +2,7 @@
  * Redux slice for OpenSPP integration state.
  * Manages collections, geofences, and statistics discovery.
  */
-import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import type { RootState, CreateAsyncThunkTypes } from './store';
 import {
   getCollections,
@@ -71,7 +71,7 @@ export const fetchOpenSPPGeofences = createAsyncThunk<
   GeofenceListResponse,
   { active?: boolean; _count?: number; _offset?: number } | undefined,
   CreateAsyncThunkTypes
->('openspp/fetchGeofences', async (options) => {
+>('openspp/fetchGeofences', async options => {
   return listGeofences(options ?? undefined);
 });
 
@@ -79,7 +79,7 @@ export const createOpenSPPGeofence = createAsyncThunk<
   GeofenceResponse,
   GeofenceCreateRequest,
   CreateAsyncThunkTypes
->('openspp/createGeofence', async (request) => {
+>('openspp/createGeofence', async request => {
   return apiCreateGeofence(request);
 });
 
@@ -87,7 +87,7 @@ export const deleteOpenSPPGeofence = createAsyncThunk<
   number,
   number,
   CreateAsyncThunkTypes
->('openspp/deleteGeofence', async (geofenceId) => {
+>('openspp/deleteGeofence', async geofenceId => {
   await apiDeleteGeofence(geofenceId);
   return geofenceId;
 });
@@ -98,10 +98,10 @@ export const opensppSlice = createSlice({
   name: 'openspp',
   initialState,
   reducers: {},
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     // Collections
     builder
-      .addCase(fetchOpenSPPCollections.pending, (state) => {
+      .addCase(fetchOpenSPPCollections.pending, state => {
         state.collectionsLoading = true;
         state.collectionsError = null;
       })
@@ -111,25 +111,26 @@ export const opensppSlice = createSlice({
       })
       .addCase(fetchOpenSPPCollections.rejected, (state, action) => {
         state.collectionsLoading = false;
-        state.collectionsError = action.error.message ?? 'Failed to fetch collections';
+        state.collectionsError =
+          action.error.message ?? 'Failed to fetch collections';
       });
 
     // Statistics
     builder
-      .addCase(fetchOpenSPPStatistics.pending, (state) => {
+      .addCase(fetchOpenSPPStatistics.pending, state => {
         state.statisticsLoading = true;
       })
       .addCase(fetchOpenSPPStatistics.fulfilled, (state, action) => {
         state.statisticsLoading = false;
         state.statistics = action.payload.categories;
       })
-      .addCase(fetchOpenSPPStatistics.rejected, (state) => {
+      .addCase(fetchOpenSPPStatistics.rejected, state => {
         state.statisticsLoading = false;
       });
 
     // Geofences
     builder
-      .addCase(fetchOpenSPPGeofences.pending, (state) => {
+      .addCase(fetchOpenSPPGeofences.pending, state => {
         state.geofencesLoading = true;
       })
       .addCase(fetchOpenSPPGeofences.fulfilled, (state, action) => {
@@ -137,7 +138,7 @@ export const opensppSlice = createSlice({
         state.geofences = action.payload.geofences;
         state.geofencesTotal = action.payload.total;
       })
-      .addCase(fetchOpenSPPGeofences.rejected, (state) => {
+      .addCase(fetchOpenSPPGeofences.rejected, state => {
         state.geofencesLoading = false;
       });
 
@@ -156,7 +157,7 @@ export const opensppSlice = createSlice({
 
     // Delete geofence
     builder.addCase(deleteOpenSPPGeofence.fulfilled, (state, action) => {
-      state.geofences = state.geofences.filter((g) => g.id !== action.payload);
+      state.geofences = state.geofences.filter(g => g.id !== action.payload);
       state.geofencesTotal -= 1;
     });
   },

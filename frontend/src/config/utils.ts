@@ -168,7 +168,9 @@ export const getLayerByKey = (layerKey: LayerKey): LayerType => {
       // doesn't do anything, but it helps catch any layer type cases we forgot above compile time via TS.
       // https://stackoverflow.com/questions/39419170/how-do-i-check-that-a-switch-block-is-exhaustive-in-typescript
 
-      ((_: never | AnticipatoryAction) => {})(definition.type);
+      ((_: never | AnticipatoryAction | 'openspp_report') => {})(
+        definition.type,
+      );
       throw new Error(
         `Found invalid layer definition for layer '${layerKey}' (Unknown type '${definition.type}'). Check config/layers.json.`,
       );
@@ -255,6 +257,14 @@ export const LayerDefinitions: LayersMap = (() => {
 
   return layers;
 })();
+
+/**
+ * Register a dynamic layer at runtime (e.g., discovered OpenSPP collections).
+ * This mutates the LayerDefinitions map so the layer system can find the layer by key.
+ */
+export function registerDynamicLayer(key: string, layer: LayerType): void {
+  (LayerDefinitions as Record<string, LayerType>)[key] = layer;
+}
 
 export function getBoundaryLayers(): BoundaryLayerProps[] {
   return Object.values(LayerDefinitions)
