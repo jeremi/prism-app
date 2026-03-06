@@ -23,6 +23,8 @@ import dashboardStateReduce from './dashboardStateSlice';
 import anticipatoryActionDroughtStateReduce from './anticipatoryAction/AADroughtStateSlice';
 import anticipatoryActionStormStateReduce from './anticipatoryAction/AAStormStateSlice';
 import anticipatoryActionFloodStateReduce from './anticipatoryAction/AAFloodStateSlice';
+import opensppStateReduce from './opensppStateSlice';
+import opensppQueryStateReduce from './opensppQueryStateSlice';
 
 const reducer = combineReducers({
   mapState: mapStateReduce,
@@ -42,6 +44,8 @@ const reducer = combineReducers({
   anticipatoryActionDroughtState: anticipatoryActionDroughtStateReduce,
   anticipatoryActionStormState: anticipatoryActionStormStateReduce,
   anticipatoryActionFloodState: anticipatoryActionFloodStateReduce,
+  opensppState: opensppStateReduce,
+  opensppQueryState: opensppQueryStateReduce,
 });
 
 export const store = configureStore({
@@ -125,6 +129,11 @@ export const store = configureStore({
         'analysisResultState.result',
         'serverState.availableDates',
         'serverPreloadState.layerDates',
+        'opensppState.collections',
+        'opensppState.geofences',
+        'opensppQueryState.drawnGeometry',
+        'opensppQueryState.spatialResult',
+        'opensppQueryState.proximityResult',
       ],
     },
   }).concat(errorToNotificationMiddleware),

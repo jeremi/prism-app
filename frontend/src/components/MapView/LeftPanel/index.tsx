@@ -27,8 +27,12 @@ import {
   isAnticipatoryActionDroughtAvailable,
   isAnticipatoryActionStormAvailable,
   isAnticipatoryActionFloodAvailable,
+  isOpenSPPAvailable,
+  isGeofencesAvailable,
 } from './utils';
 import AlertsPanel from './AlertsPanel';
+import OpenSPPQueryPanel from './OpenSPPQueryPanel';
+import GeofencePanel from './GeofencePanel';
 import { toggleRemoveLayer } from './layersPanel/MenuItem/MenuSwitch/SwitchItem/utils';
 import AnticipatoryActionFloodPanel from './AnticipatoryActionPanel/AnticipatoryActionFloodPanel';
 
@@ -211,6 +215,16 @@ const LeftPanel = memo(() => {
           {renderedTablesPanel}
           {renderAlertsPanel}
           {renderedAnticipatoryActionPanel}
+          {isOpenSPPAvailable && (
+            <TabPanel value={tabValue} index={Panel.OpenSPPQuery}>
+              {tabValue === Panel.OpenSPPQuery && <OpenSPPQueryPanel />}
+            </TabPanel>
+          )}
+          {isGeofencesAvailable && (
+            <TabPanel value={tabValue} index={Panel.Geofences}>
+              {tabValue === Panel.Geofences && <GeofencePanel />}
+            </TabPanel>
+          )}
           {/* Empty panel to remove warnings */}
           <TabPanel value={tabValue} index={Panel.None} />
         </div>

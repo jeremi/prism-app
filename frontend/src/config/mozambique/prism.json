@@ -431,5 +431,8 @@
     "exposure": {
       "population": ["pop_proj_2025"]
     }
+  },
+  "openspp": {
+    "enabled": true
   }
 }

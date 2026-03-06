@@ -53,7 +53,9 @@ import { useMediaQuery, useTheme } from '@material-ui/core';
 import { leftPanelTabValueSelector } from 'context/leftPanelStateSlice';
 import { mapStyle } from './utils';
 import GeojsonDataLayer from '../Layers/GeojsonDataLayer';
+import OpenSPPReportLayer from '../Layers/OpenSPPReportLayer';
 import AnticipatoryActionFloodLayer from '../Layers/AnticipatoryActionFloodLayer';
+import GeofenceLayer from '../Layers/GeofenceLayer';
 
 type LayerComponentsMap<U extends LayerType> = {
   [T in U['type']]: {
@@ -89,6 +91,7 @@ const componentTypes: LayerComponentsMap<LayerType> = {
   anticipatory_action_flood: {
     component: AnticipatoryActionFloodLayer,
   },
+  openspp_report: { component: OpenSPPReportLayer },
 };
 
 const LAYERS_ABOVE_BOUNDARIES = ['anticipatory_action', 'geojson_polygon'];
@@ -348,6 +351,7 @@ const MapComponent = memo(
           });
         })}
         <AnalysisLayer before={firstBoundaryId} mapRef={mapRef} />
+        <GeofenceLayer before={firstSymbolId} />
         <SelectionLayer before={firstSymbolId} />
         <MapTooltip />
         {children}

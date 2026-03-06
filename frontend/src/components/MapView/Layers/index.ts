@@ -7,6 +7,7 @@ import StaticRasterLayer from './StaticRasterLayer';
 import CompositeLayer from './CompositeLayer';
 import AnticipatoryActionDroughtLayer from './AnticipatoryActionDroughtLayer';
 import AnticipatoryActionStormLayer from './AnticipatoryActionStormLayer';
+import OpenSPPReportLayer from './OpenSPPReportLayer';
 
 export {
   ImpactLayer,
@@ -18,4 +19,5 @@ export {
   CompositeLayer,
   AnticipatoryActionDroughtLayer,
   AnticipatoryActionStormLayer,
+  OpenSPPReportLayer,
 };

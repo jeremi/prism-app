@@ -131,6 +131,9 @@ export const isAnticipatoryActionStormAvailable =
 export const isAnticipatoryActionFloodAvailable =
   !!appConfig.anticipatoryActionFloodUrl;
 
+export const isOpenSPPAvailable = !!appConfig.openspp?.enabled;
+export const isGeofencesAvailable = isOpenSPPAvailable;
+
 export const oneDayInMs = 24 * 60 * 60 * 1000;
 export const oneYearInMs = 365 * oneDayInMs;
 

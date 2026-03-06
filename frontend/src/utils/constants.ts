@@ -18,3 +18,8 @@ export const EXPORT_API_URL = `${API_URL}/export-map`;
 // Default to the VAM URL for HDC data.
 export const CHART_API_URL =
   'https://api.earthobservation.vam.wfp.org/stats/admin';
+
+// OpenSPP GIS API base URL (empty = disabled)
+export const OPENSPP_API_URL = (
+  process.env.REACT_APP_OPENSPP_API_URL || ''
+).replace(/\/$/, '');

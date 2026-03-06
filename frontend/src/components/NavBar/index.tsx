@@ -19,6 +19,8 @@ import {
   TimerOutlined,
   Notifications,
   SpeedOutlined,
+  Search,
+  PlaceOutlined,
 } from '@material-ui/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -38,6 +40,8 @@ import {
   isAnticipatoryActionDroughtAvailable,
   isAnticipatoryActionStormAvailable,
   isAnticipatoryActionFloodAvailable,
+  isOpenSPPAvailable,
+  isGeofencesAvailable,
 } from 'components/MapView/LeftPanel/utils';
 import { Panel, PanelItem } from 'config/types';
 import PanelMenu from './PanelMenu';
@@ -113,6 +117,30 @@ const panels: PanelItem[] = [
                     panel: Panel.AnticipatoryActionFlood,
                     label: 'A. Action Flood',
                     icon: <TimerOutlined />,
+                  },
+                ]
+              : []),
+          ],
+        },
+      ]
+    : []),
+  ...(isOpenSPPAvailable
+    ? [
+        {
+          label: 'OpenSPP',
+          icon: <Search />,
+          children: [
+            {
+              panel: Panel.OpenSPPQuery,
+              label: 'OpenSPP Query',
+              icon: <Search />,
+            },
+            ...(isGeofencesAvailable
+              ? [
+                  {
+                    panel: Panel.Geofences,
+                    label: 'Geofences',
+                    icon: <PlaceOutlined />,
                   },
                 ]
               : []),

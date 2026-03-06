@@ -22,6 +22,7 @@ import { fetchImpactLayerData, ImpactLayerData } from './impact';
 import type { CompositeLayerData } from './composite_data';
 import { fetchCompositeLayerData } from './composite_data';
 import { fetchGeojsonLayerData } from './geojson';
+import { fetchOpenSPPReportLayerData } from './openspp_report';
 
 export type LayerAcceptingDataType = Exclude<
   LayerType,
@@ -38,6 +39,7 @@ type LayerSpecificDataTypes = {
   point_data: PointLayerData | AdminLevelDataLayerData;
   composite: CompositeLayerData;
   geojson_polygon: GeojsonLayerData;
+  openspp_report: GeojsonLayerData;
 };
 
 export interface LayerData<L extends LayerAcceptingDataType> {
@@ -109,6 +111,7 @@ export const loadLayerData: LoadLayerDataFuncType = createAsyncThunk<
     point_data: fetchPointLayerData,
     composite: fetchCompositeLayerData,
     geojson_polygon: fetchGeojsonLayerData,
+    openspp_report: fetchOpenSPPReportLayerData,
   };
   const lazyLoad: LazyLoader<any> = layerLoaders[layer.type];
   try {

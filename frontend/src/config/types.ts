@@ -28,7 +28,8 @@ export type LayerType =
   | CompositeLayerProps
   | StaticRasterLayerProps
   | AnticipatoryActionLayerProps
-  | GeojsonDataLayerProps;
+  | GeojsonDataLayerProps
+  | OpenSPPReportLayerProps;
 
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
   k: infer I,
@@ -806,6 +807,26 @@ export class GeojsonDataLayerProps extends CommonLayerProps {
   additionalQueryParams?: { [key: string]: string | { [key: string]: string } };
 }
 
+export class OpenSPPReportLayerProps extends CommonLayerProps {
+  type: 'openspp_report' = 'openspp_report';
+
+  /** OGC collection identifier (e.g., "pop_adm2") */
+  collectionId: string;
+
+  /** GeoJSON feature property to use for choropleth coloring */
+  @makeRequired
+  dataField: string;
+
+  @makeRequired
+  declare title: string;
+
+  @makeRequired
+  declare legend: LegendDefinition;
+
+  @makeRequired
+  declare legendText: string;
+}
+
 export type RequiredKeys<T> = {
   [k in keyof T]: undefined extends T[k] ? never : k;
 }[keyof T];
@@ -850,6 +871,8 @@ export enum Panel {
   AnticipatoryActionStorm = 'anticipatory_action_storm',
   AnticipatoryActionFlood = 'anticipatory_action_flood',
   Alerts = 'alerts',
+  OpenSPPQuery = 'openspp_query',
+  Geofences = 'geofences',
 }
 
 export type LeftPanelState = {
