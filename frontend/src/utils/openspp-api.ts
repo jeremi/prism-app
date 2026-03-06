@@ -55,11 +55,20 @@ async function authenticate(): Promise<string> {
   return accessToken;
 }
 
+// Deduplication: if multiple calls need a token at the same time,
+// they share one in-flight auth request instead of issuing duplicates.
+let authPromise: Promise<string> | null = null;
+
 async function getToken(): Promise<string> {
   if (accessToken && Date.now() < tokenExpiresAt - TOKEN_REFRESH_BUFFER_MS) {
     return accessToken;
   }
-  return authenticate();
+  if (!authPromise) {
+    authPromise = authenticate().finally(() => {
+      authPromise = null;
+    });
+  }
+  return authPromise;
 }
 
 /**
@@ -115,9 +124,15 @@ export async function getCollectionItems(
   options?: { bbox?: string; limit?: number; offset?: number },
 ): Promise<OpenSPPFeatureCollection> {
   const params = new URLSearchParams();
-  if (options?.bbox) params.set('bbox', options.bbox);
-  if (options?.limit) params.set('limit', String(options.limit));
-  if (options?.offset) params.set('offset', String(options.offset));
+  if (options?.bbox) {
+    params.set('bbox', options.bbox);
+  }
+  if (options?.limit) {
+    params.set('limit', String(options.limit));
+  }
+  if (options?.offset) {
+    params.set('offset', String(options.offset));
+  }
   const qs = params.toString();
   const path = `/gis/ogc/collections/${encodeURIComponent(collectionId)}/items${qs ? `?${qs}` : ''}`;
   const res = await opensppFetch(path);
@@ -174,12 +189,18 @@ export async function listGeofences(options?: {
   _offset?: number;
 }): Promise<GeofenceListResponse> {
   const params = new URLSearchParams();
-  if (options?.geofence_type)
+  if (options?.geofence_type) {
     params.set('geofence_type', options.geofence_type);
-  if (options?.active !== undefined)
+  }
+  if (options?.active !== undefined) {
     params.set('active', String(options.active));
-  if (options?._count) params.set('_count', String(options._count));
-  if (options?._offset) params.set('_offset', String(options._offset));
+  }
+  if (options?._count) {
+    params.set('_count', String(options._count));
+  }
+  if (options?._offset) {
+    params.set('_offset', String(options._offset));
+  }
   const qs = params.toString();
   const res = await opensppFetch(`/gis/geofences${qs ? `?${qs}` : ''}`);
   return res.json();

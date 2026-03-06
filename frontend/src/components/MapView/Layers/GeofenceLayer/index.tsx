@@ -4,41 +4,20 @@ import { useSelector } from 'react-redux';
 import type { FeatureCollection } from 'geojson';
 import { opensppGeofencesSelector } from 'context/opensppStateSlice';
 import { getGeofence } from 'utils/openspp-api';
+import { buildGeofenceColorExpression } from 'utils/openspp-types';
 import { FillLayerSpecification, LineLayerSpecification } from 'maplibre-gl';
 import { appConfig } from 'config';
 
+const geofenceColorExpr = buildGeofenceColorExpression();
+
 const fillPaint: FillLayerSpecification['paint'] = {
   'fill-opacity': 0.25,
-  'fill-color': [
-    'match',
-    ['get', 'geofence_type'],
-    'hazard_zone',
-    '#d32f2f',
-    'service_area',
-    '#1976d2',
-    'targeting_area',
-    '#388e3c',
-    'custom',
-    '#f9a825',
-    '#999',
-  ],
+  'fill-color': geofenceColorExpr,
 };
 
 const linePaint: LineLayerSpecification['paint'] = {
   'line-width': 2,
-  'line-color': [
-    'match',
-    ['get', 'geofence_type'],
-    'hazard_zone',
-    '#d32f2f',
-    'service_area',
-    '#1976d2',
-    'targeting_area',
-    '#388e3c',
-    'custom',
-    '#f9a825',
-    '#999',
-  ],
+  'line-color': geofenceColorExpr,
 };
 
 /**
@@ -59,12 +38,18 @@ const GeofenceLayer = memo(({ before }: { before?: string }) => {
       return;
     }
 
+    let cancelled = false;
+
     // Fetch full geofence data (with geometry) for each geofence
+    // Note: individual fetches are needed as the list endpoint omits geometry
     const loadGeofences = async () => {
       try {
         const fullGeofences = await Promise.all(
           geofences.map(gf => getGeofence(gf.id)),
         );
+        if (cancelled) {
+          return;
+        }
         const features = fullGeofences
           .filter((gf: any) => gf.geometry)
           .map((gf: any) => ({
@@ -83,11 +68,16 @@ const GeofenceLayer = memo(({ before }: { before?: string }) => {
           features,
         });
       } catch (err) {
-        console.error('Failed to load geofence geometries:', err);
+        if (!cancelled) {
+          console.error('Failed to load geofence geometries:', err);
+        }
       }
     };
 
     loadGeofences();
+    return () => {
+      cancelled = true;
+    };
   }, [geofences, isEnabled]);
 
   if (!isEnabled || !geoJson || geoJson.features.length === 0) {

@@ -116,7 +116,7 @@ const OpenSPPQueryPanel = memo(() => {
   const spatialResult = useSelector(opensppSpatialResultSelector);
   const proximityResult = useSelector(opensppProximityResultSelector);
   const proximityParams = useSelector(opensppProximityParamsSelector);
-  const { isDrawing, drawnGeometry, startDrawing, stopDrawing } = useMapDraw();
+  const { isDrawing, drawnGeometry, toggleDrawing } = useMapDraw();
 
   // Load statistics on mount
   useEffect(() => {
@@ -157,13 +157,7 @@ const OpenSPPQueryPanel = memo(() => {
     dispatch(setDrawnGeometry(null));
   }, [dispatch]);
 
-  const handleToggleDraw = useCallback(() => {
-    if (isDrawing) {
-      stopDrawing();
-    } else {
-      startDrawing();
-    }
-  }, [isDrawing, startDrawing, stopDrawing]);
+  const handleToggleDraw = toggleDrawing;
 
   const result: SpatialQueryResponse | ProximityQueryResponse | null =
     mode === 'area' ? spatialResult : proximityResult;

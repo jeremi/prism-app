@@ -50,36 +50,49 @@ const RootAccordionItems = memo(() => {
     [selectedLayers],
   );
 
-  const layersMenuItems = menuList.filter((menuItem: MenuItemType) =>
-    menuItem.layersCategories.some(
-      (layerCategory: LayersCategoryType) => layerCategory.layers.length > 0,
-    ),
+  const layersMenuItems = useMemo(
+    () =>
+      menuList.filter((menuItem: MenuItemType) =>
+        menuItem.layersCategories.some(
+          (layerCategory: LayersCategoryType) =>
+            layerCategory.layers.length > 0,
+        ),
+      ),
+    [menuList],
   );
 
-  // Build dynamic OpenSPP layers menu item from discovered collections
+  // Convert collections to layer objects (pure computation)
+  const opensppLayers = useMemo(
+    () =>
+      isOpenSPPEnabled && collections.length > 0
+        ? collections.map(collectionToLayer)
+        : [],
+    [isOpenSPPEnabled, collections],
+  );
+
+  // Register dynamic layers as a side effect
+  useEffect(() => {
+    opensppLayers.forEach(layer => {
+      registerDynamicLayer(layer.id, layer as any);
+    });
+  }, [opensppLayers]);
+
+  // Build menu item from layers (pure computation)
   const opensppMenuItem = useMemo(() => {
-    if (!isOpenSPPEnabled || collections.length === 0) {
+    if (opensppLayers.length === 0) {
       return null;
     }
-
-    const layers = collections.map(collection => {
-      const layer = collectionToLayer(collection);
-      // Register in LayerDefinitions so toggle/SwitchItem can find it
-      registerDynamicLayer(layer.id, layer as any);
-      return layer;
-    });
-
     return {
       title: 'OpenSPP Reports',
       layersCategories: [
         {
           title: 'Collections',
-          layers: layers as any[],
+          layers: opensppLayers as any[],
           tables: [],
         },
       ],
     };
-  }, [isOpenSPPEnabled, collections]);
+  }, [opensppLayers]);
 
   return (
     <>

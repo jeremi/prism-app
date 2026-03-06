@@ -8,12 +8,17 @@ import { getLayerMapId } from 'utils/map-utils';
 import { opacitySelector } from 'context/opacityStateSlice';
 import { FillLayerSpecification } from 'maplibre-gl';
 
+export interface LayersProps {
+  layer: OpenSPPReportLayerProps;
+  before?: string;
+}
+
 const paintProps: (
   legend: LegendDefinition,
   dataField: string,
   opacity: number | undefined,
 ) => FillLayerSpecification['paint'] = (legend, dataField, opacity) => ({
-  'fill-opacity': opacity || 0.7,
+  'fill-opacity': opacity ?? 0.7,
   'fill-color': {
     property: dataField,
     type: 'categorical',
@@ -54,7 +59,7 @@ const OpenSPPReportLayer = memo(({ layer, before }: LayersProps) => {
         paint={paintProps(
           layer.legend || [],
           layer.dataField,
-          opacityState || layer.opacity,
+          opacityState ?? layer.opacity,
         )}
       />
       <Layer
@@ -64,16 +69,11 @@ const OpenSPPReportLayer = memo(({ layer, before }: LayersProps) => {
         paint={{
           'line-color': '#666',
           'line-width': 0.5,
-          'line-opacity': opacityState || 0.8,
+          'line-opacity': opacityState ?? 0.8,
         }}
       />
     </Source>
   );
 });
-
-export interface LayersProps {
-  layer: OpenSPPReportLayerProps;
-  before?: string;
-}
 
 export default OpenSPPReportLayer;

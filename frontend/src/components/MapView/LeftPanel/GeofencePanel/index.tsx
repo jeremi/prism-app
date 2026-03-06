@@ -33,20 +33,11 @@ import {
 } from 'context/opensppStateSlice';
 import useMapDraw from 'utils/useMapDraw';
 import type { GeofenceType } from 'utils/openspp-types';
-
-const GEOFENCE_TYPE_COLORS: Record<string, string> = {
-  hazard_zone: '#d32f2f',
-  service_area: '#1976d2',
-  targeting_area: '#388e3c',
-  custom: '#f9a825',
-};
-
-const GEOFENCE_TYPE_LABELS: Record<string, string> = {
-  hazard_zone: 'Hazard Zone',
-  service_area: 'Service Area',
-  targeting_area: 'Targeting Area',
-  custom: 'Custom',
-};
+import {
+  GEOFENCE_TYPE_COLORS,
+  GEOFENCE_TYPE_LABELS,
+  GEOFENCE_DEFAULT_COLOR,
+} from 'utils/openspp-types';
 
 const useStyles = makeStyles(() =>
   createStyles({
@@ -98,7 +89,7 @@ const GeofencePanel = memo(() => {
   const dispatch = useDispatch();
   const geofences = useSelector(opensppGeofencesSelector);
   const loading = useSelector(opensppGeofencesLoadingSelector);
-  const { isDrawing, drawnGeometry, startDrawing, stopDrawing, clearDrawing } =
+  const { isDrawing, drawnGeometry, clearDrawing, toggleDrawing } =
     useMapDraw();
 
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -139,7 +130,7 @@ const GeofencePanel = memo(() => {
     } finally {
       setCreating(false);
     }
-  }, [dispatch, name, description, geofenceType, drawnGeometry]);
+  }, [dispatch, name, description, geofenceType, drawnGeometry, clearDrawing]);
 
   const handleDelete = useCallback(
     (id: number) => {
@@ -149,13 +140,7 @@ const GeofencePanel = memo(() => {
     [dispatch],
   );
 
-  const handleToggleDraw = useCallback(() => {
-    if (isDrawing) {
-      stopDrawing();
-    } else {
-      startDrawing();
-    }
-  }, [isDrawing, startDrawing, stopDrawing]);
+  const handleToggleDraw = toggleDrawing;
 
   return (
     <Box className={classes.root}>
@@ -267,7 +252,8 @@ const GeofencePanel = memo(() => {
                   className={classes.chip}
                   style={{
                     backgroundColor:
-                      GEOFENCE_TYPE_COLORS[gf.geofence_type] || '#999',
+                      GEOFENCE_TYPE_COLORS[gf.geofence_type as GeofenceType] ||
+                      GEOFENCE_DEFAULT_COLOR,
                     color: '#fff',
                   }}
                 />

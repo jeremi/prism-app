@@ -25,10 +25,17 @@ export default function useMapDraw() {
   const drawnGeometry = useSelector(opensppDrawnGeometrySelector);
   const mapState = useMapState();
   const drawRef = useRef<TerraDraw | null>(null);
+  // Store map reference to avoid effect re-runs when mapState object identity changes
+  const mapRef = useRef(mapState?.maplibreMap());
 
-  // Initialize terra-draw when drawing starts
+  // Keep mapRef current
   useEffect(() => {
-    const map = mapState?.maplibreMap();
+    mapRef.current = mapState?.maplibreMap();
+  }, [mapState]);
+
+  // Initialize/teardown terra-draw when drawing state changes
+  useEffect(() => {
+    const map = mapRef.current;
     if (!map) {
       return;
     }
@@ -79,9 +86,7 @@ export default function useMapDraw() {
       });
 
       drawRef.current = draw;
-    }
-
-    if (!isDrawing && drawRef.current) {
+    } else if (!isDrawing && drawRef.current) {
       try {
         drawRef.current.stop();
       } catch {
@@ -95,12 +100,12 @@ export default function useMapDraw() {
         try {
           drawRef.current.stop();
         } catch {
-          // cleanup
+          // cleanup on unmount
         }
         drawRef.current = null;
       }
     };
-  }, [isDrawing, mapState, dispatch]);
+  }, [isDrawing, dispatch]);
 
   const startDrawing = useCallback(() => {
     dispatch(setDrawnGeometry(null));
@@ -111,10 +116,20 @@ export default function useMapDraw() {
     dispatch(setIsDrawing(false));
   }, [dispatch]);
 
+  /** Stop drawing and discard the drawn geometry */
   const clearDrawing = useCallback(() => {
     dispatch(setDrawnGeometry(null));
     dispatch(setIsDrawing(false));
   }, [dispatch]);
+
+  /** Toggle drawing on/off (clears geometry when starting) */
+  const toggleDrawing = useCallback(() => {
+    if (isDrawing) {
+      stopDrawing();
+    } else {
+      startDrawing();
+    }
+  }, [isDrawing, startDrawing, stopDrawing]);
 
   return {
     isDrawing,
@@ -122,5 +137,6 @@ export default function useMapDraw() {
     startDrawing,
     stopDrawing,
     clearDrawing,
+    toggleDrawing,
   };
 }

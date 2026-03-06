@@ -105,6 +105,33 @@ export type GeofenceType =
   | 'targeting_area'
   | 'custom';
 
+export const GEOFENCE_TYPE_COLORS: Record<GeofenceType, string> = {
+  hazard_zone: '#d32f2f',
+  service_area: '#1976d2',
+  targeting_area: '#388e3c',
+  custom: '#f9a825',
+};
+
+export const GEOFENCE_TYPE_LABELS: Record<GeofenceType, string> = {
+  hazard_zone: 'Hazard Zone',
+  service_area: 'Service Area',
+  targeting_area: 'Targeting Area',
+  custom: 'Custom',
+};
+
+export const GEOFENCE_DEFAULT_COLOR = '#999';
+
+/** Build a MapLibre match expression for geofence type colors */
+export function buildGeofenceColorExpression(): any[] {
+  const entries = Object.entries(GEOFENCE_TYPE_COLORS).flat();
+  return [
+    'match',
+    ['get', 'geofence_type'],
+    ...entries,
+    GEOFENCE_DEFAULT_COLOR,
+  ];
+}
+
 export interface GeofenceCreateRequest {
   name: string;
   description?: string;
