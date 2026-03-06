@@ -47,51 +47,36 @@ import type {
   ProximityQueryResponse,
 } from 'utils/openspp-types';
 import type { Polygon } from 'geojson';
+import {
+  opensppPanelStyles,
+  cyanBlue,
+} from '../opensppPanelStyles';
+
+/** Convert snake_case to Title Case. */
+function snakeToTitle(s: string): string {
+  return s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
 
 const useStyles = makeStyles(() =>
   createStyles({
-    root: {
-      padding: '12px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '10px',
-      width: '360px',
-      maxWidth: '100%',
-      boxSizing: 'border-box',
-    },
+    root: opensppPanelStyles.panelRoot,
     section: {
       display: 'flex',
       flexDirection: 'column',
       gap: '6px',
     },
-    sectionTitle: {
-      fontSize: '0.8rem',
-      fontWeight: 600,
-      color: '#333',
-      letterSpacing: 'normal',
-      textTransform: 'none' as const,
-    },
-    panelTitle: {
-      fontSize: '0.95rem',
-      fontWeight: 600,
-      color: '#222',
-      letterSpacing: 'normal',
-      textTransform: 'none' as const,
-    },
+    sectionTitle: opensppPanelStyles.sectionTitle,
+    panelTitle: opensppPanelStyles.panelTitle,
     modeToggle: {
       display: 'flex',
       gap: '8px',
     },
     modeButton: {
-      textTransform: 'none' as const,
-      letterSpacing: 'normal',
-      fontSize: '0.8rem',
-      color: '#333',
-      borderColor: '#aaa',
+      ...opensppPanelStyles.outlinedButton,
       '&.active': {
-        backgroundColor: '#63B2BD',
+        backgroundColor: cyanBlue,
         color: '#fff',
-        borderColor: '#63B2BD',
+        borderColor: cyanBlue,
       },
     },
     areaButtons: {
@@ -99,42 +84,18 @@ const useStyles = makeStyles(() =>
       gap: '6px',
     },
     areaButton: {
-      textTransform: 'none' as const,
-      letterSpacing: 'normal',
+      ...opensppPanelStyles.outlinedButton,
       fontSize: '0.78rem',
-      color: '#333',
-      borderColor: '#aaa',
       flex: 1,
       '&.active': {
-        borderColor: '#63B2BD',
-        color: '#63B2BD',
+        borderColor: cyanBlue,
+        color: cyanBlue,
       },
     },
-    actionButton: {
-      textTransform: 'none' as const,
-      letterSpacing: 'normal',
-      fontSize: '0.8rem',
-    },
-    runButton: {
-      textTransform: 'none' as const,
-      letterSpacing: 'normal',
-      fontSize: '0.8rem',
-      backgroundColor: '#63B2BD',
-      color: '#fff',
-      '&:hover': {
-        backgroundColor: '#52a1ac',
-      },
-      '&.Mui-disabled': {
-        backgroundColor: '#ccc',
-        color: '#888',
-      },
-    },
+    runButton: opensppPanelStyles.primaryButton,
     clearButton: {
-      textTransform: 'none' as const,
-      letterSpacing: 'normal',
-      fontSize: '0.8rem',
+      ...opensppPanelStyles.outlinedButton,
       color: '#555',
-      borderColor: '#aaa',
     },
     resultSection: {
       display: 'flex',
@@ -149,13 +110,10 @@ const useStyles = makeStyles(() =>
       textTransform: 'none' as const,
     },
     resultCategory: {
-      fontWeight: 600,
+      ...opensppPanelStyles.sectionTitle,
       fontSize: '0.78rem',
-      color: '#333',
       padding: '6px 0 2px',
       borderBottom: '1px solid #ddd',
-      letterSpacing: 'normal',
-      textTransform: 'none' as const,
     },
     resultRow: {
       display: 'flex',
@@ -172,44 +130,10 @@ const useStyles = makeStyles(() =>
       color: '#222',
       fontVariantNumeric: 'tabular-nums',
     },
-    error: {
-      color: '#d32f2f',
-      fontSize: '0.8rem',
-      letterSpacing: 'normal',
-      textTransform: 'none' as const,
-    },
-    statusText: {
-      fontSize: '0.78rem',
-      fontStyle: 'italic',
-      color: '#888',
-      letterSpacing: 'normal',
-      textTransform: 'none' as const,
-    },
-    inputField: {
-      '& .MuiInputLabel-root': {
-        color: '#555',
-      },
-      '& .MuiOutlinedInput-root': {
-        color: '#333',
-        '& fieldset': {
-          borderColor: '#aaa',
-        },
-      },
-    },
-    selectField: {
-      '& .MuiInputLabel-root': {
-        color: '#555',
-      },
-      '& .MuiOutlinedInput-root': {
-        color: '#333',
-        '& fieldset': {
-          borderColor: '#aaa',
-        },
-      },
-      '& .MuiSelect-icon': {
-        color: '#555',
-      },
-    },
+    error: opensppPanelStyles.errorText,
+    statusText: opensppPanelStyles.statusText,
+    inputField: opensppPanelStyles.inputField,
+    selectField: opensppPanelStyles.selectField,
   }),
 );
 
@@ -242,7 +166,7 @@ const OpenSPPQueryPanel = memo(() => {
   const proximityResult = useSelector(opensppProximityResultSelector);
   const proximityParams = useSelector(opensppProximityParamsSelector);
   const { isDrawing, drawnGeometry, toggleDrawing } = useMapDraw();
-  const mapState = useMapState();
+  const { maplibreMap } = useMapState();
 
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectedAreaName, setSelectedAreaName] = useState<string | null>(null);
@@ -262,7 +186,7 @@ const OpenSPPQueryPanel = memo(() => {
 
   // Click-to-select: register map click handler when selecting mode is active
   useEffect(() => {
-    const map = mapState?.maplibreMap();
+    const map = maplibreMap();
     if (!map || !isSelecting) {
       return;
     }
@@ -303,7 +227,7 @@ const OpenSPPQueryPanel = memo(() => {
       map.off('click', handleClick);
       map.getCanvas().style.cursor = '';
     };
-  }, [isSelecting, mapState, dispatch]);
+  }, [isSelecting, maplibreMap, dispatch]);
 
   const handleRunQuery = useCallback(() => {
     if (mode === 'area') {
@@ -397,7 +321,7 @@ const OpenSPPQueryPanel = memo(() => {
               variant="outlined"
               size="small"
               className={`${classes.areaButton} ${isSelecting ? 'active' : ''}`}
-              startIcon={<TouchApp style={{ color: isSelecting ? '#63B2BD' : '#555' }} />}
+              startIcon={<TouchApp style={{ color: isSelecting ? cyanBlue : '#555' }} />}
               onClick={handleToggleSelect}
             >
               {isSelecting ? 'Click a shape...' : 'Select Shape'}
@@ -406,7 +330,7 @@ const OpenSPPQueryPanel = memo(() => {
               variant="outlined"
               size="small"
               className={`${classes.areaButton} ${isDrawing ? 'active' : ''}`}
-              startIcon={<CropFree style={{ color: isDrawing ? '#63B2BD' : '#555' }} />}
+              startIcon={<CropFree style={{ color: isDrawing ? cyanBlue : '#555' }} />}
               onClick={toggleDrawing}
             >
               {isDrawing ? 'Drawing...' : 'Draw Area'}
@@ -549,9 +473,7 @@ const OpenSPPQueryPanel = memo(() => {
                 return (
                   <Box key={key}>
                     <Typography className={classes.resultCategory}>
-                      {key
-                        .replace(/_/g, ' ')
-                        .replace(/\b\w/g, c => c.toUpperCase())}
+                      {snakeToTitle(key)}
                     </Typography>
                     {Object.entries(
                       value as Record<string, unknown>,
@@ -564,9 +486,7 @@ const OpenSPPQueryPanel = memo(() => {
                             ? String(
                                 (subVal as Record<string, unknown>).label,
                               )
-                            : subKey
-                                .replace(/_/g, ' ')
-                                .replace(/\b\w/g, c => c.toUpperCase())}
+                            : snakeToTitle(subKey)}
                         </span>
                         <span className={classes.resultValue}>
                           {typeof subVal === 'object' &&
@@ -585,9 +505,7 @@ const OpenSPPQueryPanel = memo(() => {
               return (
                 <div key={key} className={classes.resultRow}>
                   <span className={classes.resultLabel}>
-                    {key
-                      .replace(/_/g, ' ')
-                      .replace(/\b\w/g, c => c.toUpperCase())}
+                    {snakeToTitle(key)}
                   </span>
                   <span className={classes.resultValue}>
                     {formatValue(value)}

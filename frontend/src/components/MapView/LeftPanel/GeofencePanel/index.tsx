@@ -38,35 +38,20 @@ import {
   GEOFENCE_TYPE_LABELS,
   GEOFENCE_DEFAULT_COLOR,
 } from 'utils/openspp-types';
+import { opensppPanelStyles } from '../opensppPanelStyles';
 
 const useStyles = makeStyles(() =>
   createStyles({
-    root: {
-      padding: '12px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '10px',
-      width: '360px',
-      maxWidth: '100%',
-      boxSizing: 'border-box',
-    },
+    root: opensppPanelStyles.panelRoot,
     header: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
     },
-    headerTitle: {
-      fontSize: '0.95rem',
-      fontWeight: 600,
-      color: '#222',
-      letterSpacing: 'normal',
-      textTransform: 'none' as const,
-    },
+    headerTitle: opensppPanelStyles.panelTitle,
     headerButton: {
-      textTransform: 'none' as const,
-      letterSpacing: 'normal',
+      ...opensppPanelStyles.outlinedButton,
       fontSize: '0.78rem',
-      color: '#333',
     },
     card: {
       marginBottom: '8px',
@@ -77,13 +62,7 @@ const useStyles = makeStyles(() =>
         paddingBottom: '12px !important',
       },
     },
-    cardTitle: {
-      fontSize: '0.85rem',
-      fontWeight: 600,
-      color: '#333',
-      letterSpacing: 'normal',
-      textTransform: 'none' as const,
-    },
+    cardTitle: opensppPanelStyles.sectionTitle,
     chip: {
       fontSize: '0.7rem',
       height: '22px',
@@ -96,65 +75,17 @@ const useStyles = makeStyles(() =>
       border: '1px solid #ddd',
       borderRadius: '4px',
     },
-    formTitle: {
-      fontSize: '0.85rem',
-      fontWeight: 600,
-      color: '#333',
-      letterSpacing: 'normal',
-      textTransform: 'none' as const,
-    },
-    formButton: {
-      textTransform: 'none' as const,
-      letterSpacing: 'normal',
-      fontSize: '0.8rem',
-      color: '#333',
-      borderColor: '#aaa',
-    },
-    createButton: {
-      textTransform: 'none' as const,
-      letterSpacing: 'normal',
-      fontSize: '0.8rem',
-      backgroundColor: '#63B2BD',
-      color: '#fff',
-      '&:hover': {
-        backgroundColor: '#52a1ac',
-      },
-      '&.Mui-disabled': {
-        backgroundColor: '#ccc',
-        color: '#888',
-      },
-    },
+    formTitle: opensppPanelStyles.sectionTitle,
+    formButton: opensppPanelStyles.outlinedButton,
+    createButton: opensppPanelStyles.primaryButton,
     deleteButton: {
       textTransform: 'none' as const,
       letterSpacing: 'normal',
       fontSize: '0.78rem',
       color: '#d32f2f',
     },
-    inputField: {
-      '& .MuiInputLabel-root': {
-        color: '#555',
-      },
-      '& .MuiOutlinedInput-root': {
-        color: '#333',
-        '& fieldset': {
-          borderColor: '#aaa',
-        },
-      },
-    },
-    selectField: {
-      '& .MuiInputLabel-root': {
-        color: '#555',
-      },
-      '& .MuiOutlinedInput-root': {
-        color: '#333',
-        '& fieldset': {
-          borderColor: '#aaa',
-        },
-      },
-      '& .MuiSelect-icon': {
-        color: '#555',
-      },
-    },
+    inputField: opensppPanelStyles.inputField,
+    selectField: opensppPanelStyles.selectField,
     geofenceList: {
       maxHeight: '400px',
       overflowY: 'auto',
@@ -165,18 +96,8 @@ const useStyles = makeStyles(() =>
       letterSpacing: 'normal',
       textTransform: 'none' as const,
     },
-    emptyText: {
-      fontSize: '0.8rem',
-      color: '#888',
-      letterSpacing: 'normal',
-      textTransform: 'none' as const,
-    },
-    drawnText: {
-      fontSize: '0.78rem',
-      color: '#888',
-      letterSpacing: 'normal',
-      textTransform: 'none' as const,
-    },
+    emptyText: opensppPanelStyles.statusText,
+    drawnText: opensppPanelStyles.statusText,
   }),
 );
 
