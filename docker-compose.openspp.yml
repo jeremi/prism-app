@@ -1,0 +1,103 @@
+# Docker Compose for PRISM + OpenSPP Integration Testing
+#
+# Spins up the PRISM frontend alongside a local OpenSPP instance
+# so the integration can be tested end-to-end.
+#
+# Prerequisites:
+#   - Clone OpenSPP next to prism-app:
+#     git clone https://github.com/OpenSPP/OpenSPP2.git ../OpenSPP2
+#
+# Usage:
+#   # Start everything (first run takes a while to build OpenSPP)
+#   docker compose -f docker-compose.openspp.yml up -d
+#
+#   # Wait for OpenSPP to be healthy (may take 2-3 minutes on first run)
+#   docker compose -f docker-compose.openspp.yml ps
+#
+#   # Access:
+#   #   PRISM frontend: http://localhost:3000
+#   #   OpenSPP:        http://localhost:8069 (admin/admin)
+#
+#   # Stop
+#   docker compose -f docker-compose.openspp.yml down
+#
+#   # Clean up (removes database volumes)
+#   docker compose -f docker-compose.openspp.yml down -v
+
+services:
+  # PRISM Frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
+    entrypoint: yarn start
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./common:/common
+      - ./frontend:/frontend
+      - /frontend/node_modules
+    environment:
+      - REACT_APP_COUNTRY=${REACT_APP_COUNTRY:-mozambique}
+      - REACT_APP_OPENSPP_API_URL=http://localhost:8069/api/v2
+      - REACT_APP_OPENSPP_CLIENT_ID=${OPENSPP_CLIENT_ID:-prism}
+      - REACT_APP_OPENSPP_CLIENT_SECRET=${OPENSPP_CLIENT_SECRET:-prism-secret}
+    depends_on:
+      openspp:
+        condition: service_healthy
+
+  # OpenSPP - Social Protection Platform
+  openspp:
+    image: openspp-dev
+    build:
+      context: ${OPENSPP_PATH:-../OpenSPP2}
+      dockerfile: docker/Dockerfile
+      target: dev
+    depends_on:
+      openspp-db:
+        condition: service_healthy
+    environment:
+      DB_HOST: openspp-db
+      DB_PORT: "5432"
+      DB_USER: odoo
+      DB_PASSWORD: odoo
+      DB_NAME: openspp
+      DB_FILTER: "^openspp$$"
+      LIST_DB: "False"
+      ODOO_ADMIN_PASSWD: admin
+      ODOO_WORKERS: "0"
+      ODOO_CRON_THREADS: "0"
+      ODOO_INIT_MODULES: "${OPENSPP_MODULES:-spp_api_v2_gis}"
+      LOG_LEVEL: info
+      PROXY_MODE: "False"
+    ports:
+      - "8069:8069"
+    volumes:
+      - ${OPENSPP_PATH:-../OpenSPP2}:/mnt/extra-addons/openspp:ro,z
+      - openspp_data:/var/lib/odoo
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8069/web/health"]
+      interval: 10s
+      timeout: 10s
+      start_period: 120s
+      retries: 12
+
+  # PostgreSQL + PostGIS for OpenSPP
+  openspp-db:
+    image: postgis/postgis:18-3.6-alpine
+    platform: linux/amd64
+    environment:
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo
+      POSTGRES_DB: openspp
+    volumes:
+      - openspp_postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odoo -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  openspp_postgres:
+  openspp_data:
