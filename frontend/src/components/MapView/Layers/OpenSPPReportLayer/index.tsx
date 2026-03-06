@@ -1,35 +1,76 @@
-import { memo, useEffect } from 'react';
+import { memo, useEffect, useMemo } from 'react';
 import { Layer, Source } from 'react-map-gl/maplibre';
 import { useDispatch, useSelector } from 'react-redux';
-import { OpenSPPReportLayerProps, LegendDefinition } from 'config/types';
+import { OpenSPPReportLayerProps } from 'config/types';
 import { LayerData, loadLayerData } from 'context/layers/layer-data';
 import { layerDataSelector } from 'context/mapStateSlice/selectors';
 import { getLayerMapId } from 'utils/map-utils';
 import { opacitySelector } from 'context/opacityStateSlice';
-import { FillLayerSpecification } from 'maplibre-gl';
+import type { FillLayerSpecification, ExpressionSpecification } from 'maplibre-gl';
+import type { FeatureCollection } from 'geojson';
 
 export interface LayersProps {
   layer: OpenSPPReportLayerProps;
   before?: string;
 }
 
-const paintProps: (
-  legend: LegendDefinition,
-  dataField: string,
-  opacity: number | undefined,
-) => FillLayerSpecification['paint'] = (legend, dataField, opacity) => ({
-  'fill-opacity': opacity ?? 0.7,
-  'fill-color': {
-    property: dataField,
-    type: 'categorical',
-    stops: legend.map(({ value, color }) => [value, color]),
-  },
-});
+/**
+ * Build a match expression that reads bucket.color from each feature.
+ * Falls back to transparent for features without bucket data.
+ */
+function buildBucketColorExpression(
+  data: FeatureCollection,
+): ExpressionSpecification {
+  // Collect unique (bucket.index -> bucket.color) pairs from features
+  const colorByIndex = new Map<number, string>();
+  for (const feature of data.features) {
+    const bucket = feature.properties?.bucket;
+    if (bucket && typeof bucket === 'object' && bucket.color) {
+      colorByIndex.set(bucket.index, bucket.color);
+    }
+  }
+
+  if (colorByIndex.size === 0) {
+    return 'transparent' as unknown as ExpressionSpecification;
+  }
+
+  // Build: ["match", ["get", "bucket_index"], idx1, color1, idx2, color2, ..., fallback]
+  const matchArgs: (string | number | ExpressionSpecification)[] = [
+    'match',
+    ['get', 'bucket_index'],
+  ];
+  for (const [index, color] of colorByIndex.entries()) {
+    matchArgs.push(index, color);
+  }
+  matchArgs.push('transparent'); // fallback
+  return matchArgs as unknown as ExpressionSpecification;
+}
+
+/**
+ * Pre-process GeoJSON to flatten bucket properties for MapLibre expressions.
+ * MapLibre can't access nested properties (bucket.color), so we hoist them.
+ */
+function preprocessData(data: FeatureCollection): FeatureCollection {
+  return {
+    ...data,
+    features: data.features.map(f => ({
+      ...f,
+      properties: {
+        ...f.properties,
+        bucket_index:
+          f.properties?.bucket?.index ?? -1,
+        bucket_color:
+          f.properties?.bucket?.color ?? 'transparent',
+        bucket_label:
+          f.properties?.bucket?.label ?? '',
+      },
+    })),
+  };
+}
 
 /**
  * Renders OpenSPP report data as choropleth polygons.
- * Similar to GeojsonDataLayer but uses a configurable dataField
- * for the fill-color property lookup.
+ * Uses server-provided bucket colors for consistent rendering with QGIS.
  */
 const OpenSPPReportLayer = memo(({ layer, before }: LayersProps) => {
   const dispatch = useDispatch();
@@ -46,21 +87,35 @@ const OpenSPPReportLayer = memo(({ layer, before }: LayersProps) => {
     dispatch(loadLayerData({ layer }));
   }, [dispatch, layer]);
 
-  if (!data) {
+  const processedData = useMemo(
+    () => (data ? preprocessData(data as FeatureCollection) : null),
+    [data],
+  );
+
+  const fillColor = useMemo(
+    () =>
+      processedData
+        ? buildBucketColorExpression(processedData)
+        : ('transparent' as unknown as ExpressionSpecification),
+    [processedData],
+  );
+
+  if (!processedData) {
     return null;
   }
 
+  const paint: FillLayerSpecification['paint'] = {
+    'fill-opacity': opacityState ?? layer.opacity ?? 0.7,
+    'fill-color': fillColor,
+  };
+
   return (
-    <Source data={data} type="geojson">
+    <Source data={processedData} type="geojson">
       <Layer
         beforeId={before}
         id={layerId}
         type="fill"
-        paint={paintProps(
-          layer.legend || [],
-          layer.dataField,
-          opacityState ?? layer.opacity,
-        )}
+        paint={paint}
       />
       <Layer
         beforeId={before}

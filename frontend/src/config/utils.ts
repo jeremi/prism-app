@@ -16,6 +16,7 @@ import {
   LayerKey,
   LayersMap,
   LayerType,
+  OpenSPPReportLayerProps,
   PointDataLayerProps,
   ReportType,
   StaticRasterLayerProps,
@@ -164,11 +165,16 @@ export const getLayerByKey = (layerKey: LayerKey): LayerType => {
         return throwInvalidLayer();
       }
       return definition;
+    case 'openspp_report':
+      if (checkRequiredKeys(OpenSPPReportLayerProps, definition, true)) {
+        return definition;
+      }
+      return throwInvalidLayer();
     default:
       // doesn't do anything, but it helps catch any layer type cases we forgot above compile time via TS.
       // https://stackoverflow.com/questions/39419170/how-do-i-check-that-a-switch-block-is-exhaustive-in-typescript
 
-      ((_: never | AnticipatoryAction | 'openspp_report') => {})(
+      ((_: never | AnticipatoryAction) => {})(
         definition.type,
       );
       throw new Error(

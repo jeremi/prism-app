@@ -52,6 +52,7 @@ export const opacityStateSlice = createSlice({
           case 'composite':
           case 'impact':
           case 'geojson_polygon':
+          case 'openspp_report':
             return [getLayerMapId(layerId), 'fill-opacity'];
           case 'point_data':
             // This is a hacky way to support opacity change for Kobo data.

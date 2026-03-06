@@ -42,15 +42,31 @@ import {
 const useStyles = makeStyles(() =>
   createStyles({
     root: {
-      padding: '16px',
+      padding: '12px',
       display: 'flex',
       flexDirection: 'column',
-      gap: '12px',
+      gap: '10px',
+      width: '360px',
+      maxWidth: '100%',
+      boxSizing: 'border-box',
     },
     header: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
+    },
+    headerTitle: {
+      fontSize: '0.95rem',
+      fontWeight: 600,
+      color: '#222',
+      letterSpacing: 'normal',
+      textTransform: 'none' as const,
+    },
+    headerButton: {
+      textTransform: 'none' as const,
+      letterSpacing: 'normal',
+      fontSize: '0.78rem',
+      color: '#333',
     },
     card: {
       marginBottom: '8px',
@@ -60,6 +76,13 @@ const useStyles = makeStyles(() =>
       '&:last-child': {
         paddingBottom: '12px !important',
       },
+    },
+    cardTitle: {
+      fontSize: '0.85rem',
+      fontWeight: 600,
+      color: '#333',
+      letterSpacing: 'normal',
+      textTransform: 'none' as const,
     },
     chip: {
       fontSize: '0.7rem',
@@ -73,6 +96,65 @@ const useStyles = makeStyles(() =>
       border: '1px solid #ddd',
       borderRadius: '4px',
     },
+    formTitle: {
+      fontSize: '0.85rem',
+      fontWeight: 600,
+      color: '#333',
+      letterSpacing: 'normal',
+      textTransform: 'none' as const,
+    },
+    formButton: {
+      textTransform: 'none' as const,
+      letterSpacing: 'normal',
+      fontSize: '0.8rem',
+      color: '#333',
+      borderColor: '#aaa',
+    },
+    createButton: {
+      textTransform: 'none' as const,
+      letterSpacing: 'normal',
+      fontSize: '0.8rem',
+      backgroundColor: '#63B2BD',
+      color: '#fff',
+      '&:hover': {
+        backgroundColor: '#52a1ac',
+      },
+      '&.Mui-disabled': {
+        backgroundColor: '#ccc',
+        color: '#888',
+      },
+    },
+    deleteButton: {
+      textTransform: 'none' as const,
+      letterSpacing: 'normal',
+      fontSize: '0.78rem',
+      color: '#d32f2f',
+    },
+    inputField: {
+      '& .MuiInputLabel-root': {
+        color: '#555',
+      },
+      '& .MuiOutlinedInput-root': {
+        color: '#333',
+        '& fieldset': {
+          borderColor: '#aaa',
+        },
+      },
+    },
+    selectField: {
+      '& .MuiInputLabel-root': {
+        color: '#555',
+      },
+      '& .MuiOutlinedInput-root': {
+        color: '#333',
+        '& fieldset': {
+          borderColor: '#aaa',
+        },
+      },
+      '& .MuiSelect-icon': {
+        color: '#555',
+      },
+    },
     geofenceList: {
       maxHeight: '400px',
       overflowY: 'auto',
@@ -80,6 +162,20 @@ const useStyles = makeStyles(() =>
     areaInfo: {
       fontSize: '0.75rem',
       color: '#666',
+      letterSpacing: 'normal',
+      textTransform: 'none' as const,
+    },
+    emptyText: {
+      fontSize: '0.8rem',
+      color: '#888',
+      letterSpacing: 'normal',
+      textTransform: 'none' as const,
+    },
+    drawnText: {
+      fontSize: '0.78rem',
+      color: '#888',
+      letterSpacing: 'normal',
+      textTransform: 'none' as const,
     },
   }),
 );
@@ -145,16 +241,22 @@ const GeofencePanel = memo(() => {
   return (
     <Box className={classes.root}>
       <Box className={classes.header}>
-        <Typography variant="h6">Geofences</Typography>
+        <Typography className={classes.headerTitle}>Geofences</Typography>
         <Box>
           <Button
             size="small"
-            startIcon={<Add />}
+            className={classes.headerButton}
+            startIcon={<Add style={{ color: '#555' }} />}
             onClick={() => setShowCreateForm(!showCreateForm)}
           >
             New
           </Button>
-          <Button size="small" startIcon={<Refresh />} onClick={handleRefresh}>
+          <Button
+            size="small"
+            className={classes.headerButton}
+            startIcon={<Refresh style={{ color: '#555' }} />}
+            onClick={handleRefresh}
+          >
             Refresh
           </Button>
         </Box>
@@ -163,8 +265,9 @@ const GeofencePanel = memo(() => {
       {/* Create form */}
       {showCreateForm && (
         <Box className={classes.createForm}>
-          <Typography variant="subtitle2">Create Geofence</Typography>
+          <Typography className={classes.formTitle}>Create Geofence</Typography>
           <TextField
+            className={classes.inputField}
             label="Name"
             size="small"
             variant="outlined"
@@ -173,6 +276,7 @@ const GeofencePanel = memo(() => {
             required
           />
           <TextField
+            className={classes.inputField}
             label="Description"
             size="small"
             variant="outlined"
@@ -181,7 +285,7 @@ const GeofencePanel = memo(() => {
             multiline
             rows={2}
           />
-          <FormControl variant="outlined" size="small">
+          <FormControl variant="outlined" size="small" className={classes.selectField}>
             <InputLabel>Type</InputLabel>
             <Select
               value={geofenceType}
@@ -198,7 +302,7 @@ const GeofencePanel = memo(() => {
           <Button
             variant="outlined"
             size="small"
-            color={isDrawing ? 'secondary' : 'primary'}
+            className={classes.formButton}
             onClick={handleToggleDraw}
           >
             {isDrawing
@@ -208,17 +312,17 @@ const GeofencePanel = memo(() => {
                 : 'Draw Area on Map'}
           </Button>
           {drawnGeometry && (
-            <Typography variant="body2" color="textSecondary">
+            <Typography className={classes.drawnText}>
               Area drawn
             </Typography>
           )}
           <Button
             variant="contained"
-            color="primary"
             size="small"
+            className={classes.createButton}
             disabled={!name || !drawnGeometry || creating}
             onClick={handleCreate}
-            startIcon={creating ? <CircularProgress size={16} /> : <Add />}
+            startIcon={creating ? <CircularProgress size={16} style={{ color: '#fff' }} /> : <Add />}
           >
             {creating ? 'Creating...' : 'Create Geofence'}
           </Button>
@@ -243,7 +347,7 @@ const GeofencePanel = memo(() => {
                 justifyContent="space-between"
                 alignItems="center"
               >
-                <Typography variant="subtitle2">{gf.name}</Typography>
+                <Typography className={classes.cardTitle}>{gf.name}</Typography>
                 <Chip
                   label={
                     GEOFENCE_TYPE_LABELS[gf.geofence_type] || gf.geofence_type
@@ -266,8 +370,8 @@ const GeofencePanel = memo(() => {
             <CardActions>
               <Button
                 size="small"
-                color="secondary"
-                startIcon={<Delete />}
+                className={classes.deleteButton}
+                startIcon={<Delete style={{ color: '#d32f2f' }} />}
                 onClick={() => setDeleteId(gf.id)}
               >
                 Delete
@@ -276,7 +380,7 @@ const GeofencePanel = memo(() => {
           </Card>
         ))}
         {geofences.length === 0 && !loading && (
-          <Typography variant="body2" color="textSecondary">
+          <Typography className={classes.emptyText}>
             No geofences found
           </Typography>
         )}

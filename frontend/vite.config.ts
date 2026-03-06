@@ -95,6 +95,16 @@ export default defineConfig({
     // Prevent the browser from opening automatically in docker
     open: false,
     host: true,
+    proxy: {
+      // Proxy OpenSPP API requests to avoid CORS issues in development.
+      // REACT_APP_OPENSPP_API_URL should be set to '/api/v2/spp' (relative)
+      // so the browser sends requests to the Vite dev server, which forwards
+      // them to the OpenSPP backend.
+      '/api/v2/spp': {
+        target: process.env.OPENSPP_BACKEND_URL || 'http://openspp:8069',
+        changeOrigin: true,
+      },
+    },
   },
   resolve: {
     alias: {

@@ -20,6 +20,7 @@ import myanmar from './myanmar';
 import namibia from './namibia';
 import nepal from './nepal';
 import nigeria from './nigeria';
+import philippines from './philippines';
 import rbd from './rbd';
 import sierraleone from './sierraleone';
 import somalia from './somalia';
@@ -59,6 +60,7 @@ export const configMap = {
   namibia,
   nepal,
   nigeria,
+  philippines,
   rbd,
   sierraleone,
   somalia,

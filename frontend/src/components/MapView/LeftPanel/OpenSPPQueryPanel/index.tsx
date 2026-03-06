@@ -1,13 +1,10 @@
-import { memo, useCallback, useEffect, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
-  Checkbox,
   CircularProgress,
   Divider,
   FormControl,
-  FormControlLabel,
-  FormGroup,
   InputLabel,
   MenuItem,
   Select,
@@ -21,6 +18,7 @@ import {
   Clear,
   RadioButtonChecked,
   CropFree,
+  TouchApp,
 } from '@material-ui/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -32,12 +30,10 @@ import {
   opensppQueryModeSelector,
   opensppQueryLoadingSelector,
   opensppQueryErrorSelector,
-  opensppSelectedVariablesSelector,
   opensppSpatialResultSelector,
   opensppProximityResultSelector,
   opensppProximityParamsSelector,
   setQueryMode,
-  toggleVariable,
   setProximityParams,
   setDrawnGeometry,
   clearQueryResults,
@@ -45,63 +41,193 @@ import {
   executeOpenSPPProximityQuery,
 } from 'context/opensppQueryStateSlice';
 import useMapDraw from 'utils/useMapDraw';
+import { useMapState } from 'utils/useMapState';
 import type {
   SpatialQueryResponse,
   ProximityQueryResponse,
 } from 'utils/openspp-types';
+import type { Polygon } from 'geojson';
 
 const useStyles = makeStyles(() =>
   createStyles({
     root: {
-      padding: '16px',
+      padding: '12px',
       display: 'flex',
       flexDirection: 'column',
-      gap: '12px',
+      gap: '10px',
+      width: '360px',
+      maxWidth: '100%',
+      boxSizing: 'border-box',
     },
     section: {
       display: 'flex',
       flexDirection: 'column',
-      gap: '8px',
+      gap: '6px',
+    },
+    sectionTitle: {
+      fontSize: '0.8rem',
+      fontWeight: 600,
+      color: '#333',
+      letterSpacing: 'normal',
+      textTransform: 'none' as const,
+    },
+    panelTitle: {
+      fontSize: '0.95rem',
+      fontWeight: 600,
+      color: '#222',
+      letterSpacing: 'normal',
+      textTransform: 'none' as const,
     },
     modeToggle: {
       display: 'flex',
       gap: '8px',
     },
-    statsGroup: {
-      maxHeight: '200px',
-      overflowY: 'auto',
-      padding: '4px 8px',
-      border: '1px solid #ddd',
-      borderRadius: '4px',
+    modeButton: {
+      textTransform: 'none' as const,
+      letterSpacing: 'normal',
+      fontSize: '0.8rem',
+      color: '#333',
+      borderColor: '#aaa',
+      '&.active': {
+        backgroundColor: '#63B2BD',
+        color: '#fff',
+        borderColor: '#63B2BD',
+      },
     },
-    categoryTitle: {
+    areaButtons: {
+      display: 'flex',
+      gap: '6px',
+    },
+    areaButton: {
+      textTransform: 'none' as const,
+      letterSpacing: 'normal',
+      fontSize: '0.78rem',
+      color: '#333',
+      borderColor: '#aaa',
+      flex: 1,
+      '&.active': {
+        borderColor: '#63B2BD',
+        color: '#63B2BD',
+      },
+    },
+    actionButton: {
+      textTransform: 'none' as const,
+      letterSpacing: 'normal',
+      fontSize: '0.8rem',
+    },
+    runButton: {
+      textTransform: 'none' as const,
+      letterSpacing: 'normal',
+      fontSize: '0.8rem',
+      backgroundColor: '#63B2BD',
+      color: '#fff',
+      '&:hover': {
+        backgroundColor: '#52a1ac',
+      },
+      '&.Mui-disabled': {
+        backgroundColor: '#ccc',
+        color: '#888',
+      },
+    },
+    clearButton: {
+      textTransform: 'none' as const,
+      letterSpacing: 'normal',
+      fontSize: '0.8rem',
+      color: '#555',
+      borderColor: '#aaa',
+    },
+    resultSection: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '6px',
+    },
+    resultSummary: {
+      fontSize: '0.8rem',
+      color: '#555',
+      lineHeight: 1.5,
+      letterSpacing: 'normal',
+      textTransform: 'none' as const,
+    },
+    resultCategory: {
       fontWeight: 600,
-      fontSize: '0.85rem',
-      marginTop: '8px',
+      fontSize: '0.78rem',
+      color: '#333',
+      padding: '6px 0 2px',
+      borderBottom: '1px solid #ddd',
+      letterSpacing: 'normal',
+      textTransform: 'none' as const,
     },
-    resultTable: {
-      width: '100%',
-      borderCollapse: 'collapse',
-      '& th, & td': {
-        padding: '6px 8px',
-        borderBottom: '1px solid #eee',
-        fontSize: '0.8rem',
-        textAlign: 'left',
-      },
-      '& th': {
-        fontWeight: 600,
-        backgroundColor: '#f5f5f5',
-      },
+    resultRow: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      padding: '3px 0',
+      fontSize: '0.8rem',
+      borderBottom: '1px solid #f5f5f5',
+    },
+    resultLabel: {
+      color: '#555',
+    },
+    resultValue: {
+      fontWeight: 500,
+      color: '#222',
+      fontVariantNumeric: 'tabular-nums',
     },
     error: {
       color: '#d32f2f',
-      fontSize: '0.85rem',
+      fontSize: '0.8rem',
+      letterSpacing: 'normal',
+      textTransform: 'none' as const,
     },
-    drawButton: {
-      textTransform: 'none',
+    statusText: {
+      fontSize: '0.78rem',
+      fontStyle: 'italic',
+      color: '#888',
+      letterSpacing: 'normal',
+      textTransform: 'none' as const,
+    },
+    inputField: {
+      '& .MuiInputLabel-root': {
+        color: '#555',
+      },
+      '& .MuiOutlinedInput-root': {
+        color: '#333',
+        '& fieldset': {
+          borderColor: '#aaa',
+        },
+      },
+    },
+    selectField: {
+      '& .MuiInputLabel-root': {
+        color: '#555',
+      },
+      '& .MuiOutlinedInput-root': {
+        color: '#333',
+        '& fieldset': {
+          borderColor: '#aaa',
+        },
+      },
+      '& .MuiSelect-icon': {
+        color: '#555',
+      },
     },
   }),
 );
+
+/** Format a stat value for display. */
+function formatValue(value: unknown): string {
+  if (value === null || value === undefined) {
+    return '-';
+  }
+  if (typeof value === 'number') {
+    return Number.isInteger(value)
+      ? value.toLocaleString()
+      : value.toFixed(2);
+  }
+  if (typeof value === 'object') {
+    return JSON.stringify(value);
+  }
+  return String(value);
+}
 
 const OpenSPPQueryPanel = memo(() => {
   const classes = useStyles();
@@ -112,18 +238,72 @@ const OpenSPPQueryPanel = memo(() => {
   const mode = useSelector(opensppQueryModeSelector);
   const loading = useSelector(opensppQueryLoadingSelector);
   const error = useSelector(opensppQueryErrorSelector);
-  const selectedVariables = useSelector(opensppSelectedVariablesSelector);
   const spatialResult = useSelector(opensppSpatialResultSelector);
   const proximityResult = useSelector(opensppProximityResultSelector);
   const proximityParams = useSelector(opensppProximityParamsSelector);
   const { isDrawing, drawnGeometry, toggleDrawing } = useMapDraw();
+  const mapState = useMapState();
 
-  // Load statistics on mount
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [selectedAreaName, setSelectedAreaName] = useState<string | null>(null);
+
+  // Load statistics on mount (for all-variable queries)
   useEffect(() => {
     if (statistics.length === 0 && !statisticsLoading) {
       dispatch(fetchOpenSPPStatistics() as any);
     }
   }, [dispatch, statistics.length, statisticsLoading]);
+
+  // All variable names for query (no manual selection needed)
+  const allVariables = useMemo(
+    () => statistics.flatMap(cat => cat.statistics.map(s => s.name)),
+    [statistics],
+  );
+
+  // Click-to-select: register map click handler when selecting mode is active
+  useEffect(() => {
+    const map = mapState?.maplibreMap();
+    if (!map || !isSelecting) {
+      return;
+    }
+
+    const handleClick = (e: any) => {
+      // Query all rendered fill layers at the click point
+      const features = map.queryRenderedFeatures(e.point, {
+        layers: map
+          .getStyle()
+          .layers.filter(
+            (l: any) =>
+              l.type === 'fill' && l.id.includes('boundary'),
+          )
+          .map((l: any) => l.id),
+      });
+
+      if (features.length > 0) {
+        const feature = features[0];
+        const geometry = feature.geometry as Polygon;
+        const name =
+          feature.properties?.ADM3_EN ||
+          feature.properties?.ADM2_EN ||
+          feature.properties?.ADM1_EN ||
+          feature.properties?.name ||
+          'Selected area';
+
+        dispatch(setDrawnGeometry(geometry));
+        setSelectedAreaName(name);
+        setIsSelecting(false);
+        map.getCanvas().style.cursor = '';
+      }
+    };
+
+    map.getCanvas().style.cursor = 'pointer';
+    map.on('click', handleClick);
+
+    return () => {
+      map.off('click', handleClick);
+      map.getCanvas().style.cursor = '';
+    };
+  }, [isSelecting, mapState, dispatch]);
 
   const handleRunQuery = useCallback(() => {
     if (mode === 'area') {
@@ -133,7 +313,7 @@ const OpenSPPQueryPanel = memo(() => {
       dispatch(
         executeOpenSPPSpatialQuery({
           geometry: drawnGeometry,
-          variables: selectedVariables,
+          variables: allVariables,
         }) as any,
       );
     } else {
@@ -146,18 +326,22 @@ const OpenSPPQueryPanel = memo(() => {
           longitude: proximityParams.lng,
           radius_km: proximityParams.radiusKm,
           relation: proximityParams.relation,
-          variables: selectedVariables,
+          variables: allVariables,
         }) as any,
       );
     }
-  }, [dispatch, mode, drawnGeometry, selectedVariables, proximityParams]);
+  }, [dispatch, mode, drawnGeometry, allVariables, proximityParams]);
 
   const handleClear = useCallback(() => {
     dispatch(clearQueryResults());
     dispatch(setDrawnGeometry(null));
+    setSelectedAreaName(null);
   }, [dispatch]);
 
-  const handleToggleDraw = toggleDrawing;
+  const handleToggleSelect = useCallback(() => {
+    setIsSelecting(prev => !prev);
+    setSelectedAreaName(null);
+  }, []);
 
   const result: SpatialQueryResponse | ProximityQueryResponse | null =
     mode === 'area' ? spatialResult : proximityResult;
@@ -174,24 +358,26 @@ const OpenSPPQueryPanel = memo(() => {
 
   return (
     <Box className={classes.root}>
-      <Typography variant="h6">OpenSPP Query</Typography>
+      <Typography className={classes.panelTitle}>
+        OpenSPP Query
+      </Typography>
 
       {/* Mode toggle */}
       <Box className={classes.modeToggle}>
         <Button
-          variant={mode === 'area' ? 'contained' : 'outlined'}
-          color="primary"
+          variant="outlined"
           size="small"
-          startIcon={<CropFree />}
+          className={`${classes.modeButton} ${mode === 'area' ? 'active' : ''}`}
+          startIcon={<CropFree style={{ color: mode === 'area' ? '#fff' : '#555' }} />}
           onClick={() => dispatch(setQueryMode('area'))}
         >
-          Area Query
+          Area
         </Button>
         <Button
-          variant={mode === 'proximity' ? 'contained' : 'outlined'}
-          color="primary"
+          variant="outlined"
           size="small"
-          startIcon={<RadioButtonChecked />}
+          className={`${classes.modeButton} ${mode === 'proximity' ? 'active' : ''}`}
+          startIcon={<RadioButtonChecked style={{ color: mode === 'proximity' ? '#fff' : '#555' }} />}
           onClick={() => dispatch(setQueryMode('proximity'))}
         >
           Proximity
@@ -200,74 +386,47 @@ const OpenSPPQueryPanel = memo(() => {
 
       <Divider />
 
-      {/* Statistics selection */}
-      <Box className={classes.section}>
-        <Typography variant="subtitle2">
-          Statistics {statisticsLoading && <CircularProgress size={14} />}
-        </Typography>
-        <FormGroup className={classes.statsGroup}>
-          {statistics.map(category => (
-            <Box key={category.code}>
-              <Typography className={classes.categoryTitle}>
-                {category.name}
-              </Typography>
-              {category.statistics.map(stat => (
-                <FormControlLabel
-                  key={stat.name}
-                  control={
-                    <Checkbox
-                      size="small"
-                      checked={selectedVariables.includes(stat.name)}
-                      onChange={() => dispatch(toggleVariable(stat.name))}
-                    />
-                  }
-                  label={
-                    <Typography variant="body2">
-                      {stat.label}
-                      {stat.unit ? ` (${stat.unit})` : ''}
-                    </Typography>
-                  }
-                />
-              ))}
-            </Box>
-          ))}
-          {statistics.length === 0 && !statisticsLoading && (
-            <Typography variant="body2" color="textSecondary">
-              No statistics available
-            </Typography>
-          )}
-        </FormGroup>
-      </Box>
-
-      <Divider />
-
       {/* Query inputs */}
       {mode === 'area' ? (
         <Box className={classes.section}>
-          <Typography variant="subtitle2">Draw Area on Map</Typography>
-          <Button
-            variant="outlined"
-            color={isDrawing ? 'secondary' : 'primary'}
-            size="small"
-            className={classes.drawButton}
-            onClick={handleToggleDraw}
-          >
-            {isDrawing
-              ? 'Stop Drawing'
-              : drawnGeometry
-                ? 'Redraw Area'
-                : 'Start Drawing'}
-          </Button>
+          <Typography className={classes.sectionTitle}>
+            Select Area
+          </Typography>
+          <Box className={classes.areaButtons}>
+            <Button
+              variant="outlined"
+              size="small"
+              className={`${classes.areaButton} ${isSelecting ? 'active' : ''}`}
+              startIcon={<TouchApp style={{ color: isSelecting ? '#63B2BD' : '#555' }} />}
+              onClick={handleToggleSelect}
+            >
+              {isSelecting ? 'Click a shape...' : 'Select Shape'}
+            </Button>
+            <Button
+              variant="outlined"
+              size="small"
+              className={`${classes.areaButton} ${isDrawing ? 'active' : ''}`}
+              startIcon={<CropFree style={{ color: isDrawing ? '#63B2BD' : '#555' }} />}
+              onClick={toggleDrawing}
+            >
+              {isDrawing ? 'Drawing...' : 'Draw Area'}
+            </Button>
+          </Box>
           {drawnGeometry && (
-            <Typography variant="body2" color="textSecondary">
-              Area selected
+            <Typography className={classes.statusText}>
+              {selectedAreaName
+                ? `Selected: ${selectedAreaName}`
+                : 'Area selected'}
             </Typography>
           )}
         </Box>
       ) : (
         <Box className={classes.section}>
-          <Typography variant="subtitle2">Proximity Parameters</Typography>
+          <Typography className={classes.sectionTitle}>
+            Proximity Parameters
+          </Typography>
           <TextField
+            className={classes.inputField}
             label="Latitude"
             type="number"
             size="small"
@@ -283,6 +442,7 @@ const OpenSPPQueryPanel = memo(() => {
             inputProps={{ step: 0.001, min: -90, max: 90 }}
           />
           <TextField
+            className={classes.inputField}
             label="Longitude"
             type="number"
             size="small"
@@ -298,6 +458,7 @@ const OpenSPPQueryPanel = memo(() => {
             inputProps={{ step: 0.001, min: -180, max: 180 }}
           />
           <TextField
+            className={classes.inputField}
             label="Radius (km)"
             type="number"
             size="small"
@@ -308,7 +469,7 @@ const OpenSPPQueryPanel = memo(() => {
             }
             inputProps={{ step: 1, min: 1, max: 500 }}
           />
-          <FormControl variant="outlined" size="small">
+          <FormControl variant="outlined" size="small" className={classes.selectField}>
             <InputLabel>Relation</InputLabel>
             <Select
               value={proximityParams.relation}
@@ -332,9 +493,9 @@ const OpenSPPQueryPanel = memo(() => {
       <Box display="flex" style={{ gap: '8px' }}>
         <Button
           variant="contained"
-          color="primary"
           size="small"
-          startIcon={loading ? <CircularProgress size={16} /> : <PlayArrow />}
+          className={classes.runButton}
+          startIcon={loading ? <CircularProgress size={16} style={{ color: '#fff' }} /> : <PlayArrow />}
           disabled={!canRun}
           onClick={handleRunQuery}
         >
@@ -343,7 +504,8 @@ const OpenSPPQueryPanel = memo(() => {
         <Button
           variant="outlined"
           size="small"
-          startIcon={<Clear />}
+          className={classes.clearButton}
+          startIcon={<Clear style={{ color: '#555' }} />}
           onClick={handleClear}
         >
           Clear
@@ -355,42 +517,85 @@ const OpenSPPQueryPanel = memo(() => {
 
       {/* Results */}
       {result && (
-        <Box className={classes.section}>
-          <Typography variant="subtitle2">Results</Typography>
-          <Typography variant="body2" color="textSecondary">
-            Total registrants: {result.total_count} | Method:{' '}
-            {result.query_method} | Areas matched: {result.areas_matched}
+        <Box className={classes.resultSection}>
+          <Divider />
+          <Typography className={classes.sectionTitle}>
+            Results
           </Typography>
-          {result.computed_at && (
-            <Typography variant="caption" color="textSecondary">
-              Computed: {new Date(result.computed_at).toLocaleString()}
-            </Typography>
-          )}
-          <table className={classes.resultTable}>
-            <thead>
-              <tr>
-                <th>Statistic</th>
-                <th>Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(result.statistics).map(([key, value]) => (
-                <tr key={key}>
-                  <td>{key}</td>
-                  <td>
-                    {typeof value === 'object' && value !== null
-                      ? JSON.stringify(value)
-                      : String(value ?? 'N/A')}
-                  </td>
-                </tr>
-              ))}
-              {Object.keys(result.statistics).length === 0 && (
-                <tr>
-                  <td colSpan={2}>No statistics returned</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+          <Box className={classes.resultSummary}>
+            <div>
+              <strong>Total Registrants:</strong>{' '}
+              {(result.total_count ?? 0).toLocaleString()}
+            </div>
+            <div>
+              <strong>Method:</strong> {result.query_method}
+            </div>
+            <div>
+              <strong>Areas Matched:</strong> {result.areas_matched}
+            </div>
+          </Box>
+
+          {/* Statistics results */}
+          <Box style={{ maxHeight: '350px', overflowY: 'auto' }}>
+            {Object.entries(result.statistics).map(([key, value]) => {
+              if (key === '_grouped') {
+                return null;
+              }
+              if (
+                typeof value === 'object' &&
+                value !== null &&
+                !Array.isArray(value)
+              ) {
+                return (
+                  <Box key={key}>
+                    <Typography className={classes.resultCategory}>
+                      {key
+                        .replace(/_/g, ' ')
+                        .replace(/\b\w/g, c => c.toUpperCase())}
+                    </Typography>
+                    {Object.entries(
+                      value as Record<string, unknown>,
+                    ).map(([subKey, subVal]) => (
+                      <div key={subKey} className={classes.resultRow}>
+                        <span className={classes.resultLabel}>
+                          {typeof subVal === 'object' &&
+                          subVal !== null &&
+                          'label' in (subVal as Record<string, unknown>)
+                            ? String(
+                                (subVal as Record<string, unknown>).label,
+                              )
+                            : subKey
+                                .replace(/_/g, ' ')
+                                .replace(/\b\w/g, c => c.toUpperCase())}
+                        </span>
+                        <span className={classes.resultValue}>
+                          {typeof subVal === 'object' &&
+                          subVal !== null &&
+                          'value' in (subVal as Record<string, unknown>)
+                            ? formatValue(
+                                (subVal as Record<string, unknown>).value,
+                              )
+                            : formatValue(subVal)}
+                        </span>
+                      </div>
+                    ))}
+                  </Box>
+                );
+              }
+              return (
+                <div key={key} className={classes.resultRow}>
+                  <span className={classes.resultLabel}>
+                    {key
+                      .replace(/_/g, ' ')
+                      .replace(/\b\w/g, c => c.toUpperCase())}
+                  </span>
+                  <span className={classes.resultValue}>
+                    {formatValue(value)}
+                  </span>
+                </div>
+              );
+            })}
+          </Box>
         </Box>
       )}
     </Box>
