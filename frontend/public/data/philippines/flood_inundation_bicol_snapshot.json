@@ -1,0 +1,101 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "level": "HIGH",
+        "flood_id": "bicol-high-001",
+        "description": "Major inundation zone, Camarines Sur lowlands"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[123.35, 13.55], [123.42, 13.55], [123.45, 13.58], [123.47, 13.63], [123.45, 13.68], [123.40, 13.70], [123.35, 13.68], [123.32, 13.63], [123.33, 13.58], [123.35, 13.55]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "level": "HIGH",
+        "flood_id": "bicol-high-002",
+        "description": "Naga City area inundation"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[123.16, 13.58], [123.22, 13.56], [123.26, 13.58], [123.28, 13.62], [123.26, 13.66], [123.22, 13.68], [123.18, 13.66], [123.15, 13.62], [123.16, 13.58]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "level": "MEDIUM",
+        "flood_id": "bicol-med-001",
+        "description": "Moderate flooding, Camarines Sur coast"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[123.48, 13.50], [123.55, 13.48], [123.60, 13.52], [123.62, 13.58], [123.58, 13.62], [123.52, 13.60], [123.48, 13.56], [123.48, 13.50]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "level": "MEDIUM",
+        "flood_id": "bicol-med-002",
+        "description": "Moderate flooding near Iriga"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[123.40, 13.40], [123.46, 13.38], [123.50, 13.42], [123.48, 13.48], [123.42, 13.50], [123.38, 13.46], [123.40, 13.40]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "level": "MEDIUM",
+        "flood_id": "bicol-med-003",
+        "description": "Moderate flooding, Albay lowlands"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[123.65, 13.12], [123.72, 13.10], [123.78, 13.14], [123.76, 13.20], [123.70, 13.22], [123.64, 13.18], [123.65, 13.12]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "level": "LOW",
+        "flood_id": "bicol-low-001",
+        "description": "Minor flooding, northern Camarines Sur"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[123.25, 13.72], [123.32, 13.70], [123.38, 13.74], [123.36, 13.80], [123.30, 13.82], [123.24, 13.78], [123.25, 13.72]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "level": "LOW",
+        "flood_id": "bicol-low-002",
+        "description": "Minor flooding, coastal Albay"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[123.72, 13.22], [123.78, 13.20], [123.82, 13.24], [123.80, 13.30], [123.75, 13.32], [123.70, 13.28], [123.72, 13.22]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "level": "LOW",
+        "flood_id": "bicol-low-003",
+        "description": "Minor flooding, Sorsogon"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[123.90, 12.98], [123.96, 12.96], [124.00, 13.00], [123.98, 13.06], [123.92, 13.08], [123.88, 13.04], [123.90, 12.98]]]
+      }
+    }
+  ]
+}
