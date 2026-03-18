@@ -13,6 +13,7 @@ import { boundaryCache } from 'utils/boundary-cache';
 import LeftPanel from './LeftPanel';
 import MapComponent from './Map';
 import OtherFeatures from './OtherFeatures';
+import OpensppStatisticsPanel from './LeftPanel/OpensppStatisticsPanel';
 /*
   reverse the order off adding layers so that the first boundary layer will be placed at the very bottom,
   to prevent other boundary layers being covered by any layers
@@ -56,6 +57,7 @@ const MapView = memo(() => {
       <LeftPanel />
       <OtherFeatures />
       <MapComponent />
+      <OpensppStatisticsPanel />
     </Box>
   );
 });

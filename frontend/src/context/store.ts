@@ -23,6 +23,7 @@ import dashboardStateReduce from './dashboardStateSlice';
 import anticipatoryActionDroughtStateReduce from './anticipatoryAction/AADroughtStateSlice';
 import anticipatoryActionStormStateReduce from './anticipatoryAction/AAStormStateSlice';
 import anticipatoryActionFloodStateReduce from './anticipatoryAction/AAFloodStateSlice';
+import opensppStatsReduce from './opensppStatsSlice';
 
 const reducer = combineReducers({
   mapState: mapStateReduce,
@@ -42,6 +43,7 @@ const reducer = combineReducers({
   anticipatoryActionDroughtState: anticipatoryActionDroughtStateReduce,
   anticipatoryActionStormState: anticipatoryActionStormStateReduce,
   anticipatoryActionFloodState: anticipatoryActionFloodStateReduce,
+  opensppStats: opensppStatsReduce,
 });
 
 export const store = configureStore({
