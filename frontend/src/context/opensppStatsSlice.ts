@@ -45,6 +45,8 @@ export type StatsStatus =
 export interface OpensppStatsState {
   selectedGeometry: GeoJSON.Geometry | null;
   selectedFeatureProperties: Record<string, any> | null;
+  selectedLayerId: string | null;
+  selectedLayerTitle: string | null;
   status: StatsStatus;
   result: SpatialStatsResult | null;
   errorMessage: string | null;
@@ -54,6 +56,8 @@ export interface OpensppStatsState {
 const initialState: OpensppStatsState = {
   selectedGeometry: null,
   selectedFeatureProperties: null,
+  selectedLayerId: null,
+  selectedLayerTitle: null,
   status: 'idle',
   result: null,
   errorMessage: null,
@@ -71,11 +75,15 @@ export const opensppStatsSlice = createSlice({
       }: PayloadAction<{
         geometry: GeoJSON.Geometry;
         properties: Record<string, any>;
+        layerId: string;
+        layerTitle: string;
       }>,
     ) => ({
       ...state,
       selectedGeometry: payload.geometry,
       selectedFeatureProperties: payload.properties,
+      selectedLayerId: payload.layerId,
+      selectedLayerTitle: payload.layerTitle,
       status: 'loading' as StatsStatus,
       result: null,
       errorMessage: null,

@@ -95,6 +95,12 @@ export default defineConfig({
     // Prevent the browser from opening automatically in docker
     open: false,
     host: true,
+    proxy: {
+      '/openspp': {
+        target: process.env.REACT_APP_API_URL || 'http://localhost:8000',
+        changeOrigin: true,
+      },
+    },
   },
   resolve: {
     alias: {

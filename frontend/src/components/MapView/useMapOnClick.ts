@@ -9,6 +9,7 @@ import {
 } from 'context/tooltipStateSlice';
 import { makeFeatureInfoRequest } from 'utils/server-utils';
 import { clearDataset } from 'context/datasetStateSlice';
+import { clearSelectedGeometry } from 'context/opensppStatsSlice';
 import { MapLayerMouseEvent } from 'maplibre-gl';
 import { MapRef } from 'react-map-gl/maplibre';
 import { getFormattedDate } from 'utils/date-utils';
@@ -55,6 +56,17 @@ const useMapOnClick = (boundaryLayerId: string, mapRef: MapRef | null) => {
     const defaultFunction = (mapEvent: MapLayerMouseEvent) => {
       dispatch(hidePopup());
       dispatch(clearDataset());
+
+      // Clear OpenSPP polygon selection if no fill-type feature was clicked.
+      // Fill layers in this app correspond to geojson polygon layers.
+      const map = mapRef.getMap();
+      const features = map.queryRenderedFeatures(mapEvent.point);
+      const hitFillFeature = features.some(
+        (f: any) => f.layer?.type === 'fill',
+      );
+      if (!hitFillFeature) {
+        dispatch(clearSelectedGeometry());
+      }
       // Hide the alert popup if we click outside the target country (outside boundary bbox)
       const featureInfoLayers = getFeatureInfoLayers(mapEvent.features);
       // Get layers that have getFeatureInfo option.

@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useRef } from 'react';
+import { memo, useCallback, useEffect } from 'react';
 import { Layer, Source } from 'react-map-gl/maplibre';
 
 import { useDispatch, useSelector } from 'react-redux';
@@ -6,16 +6,12 @@ import { MapLayerMouseEvent } from 'maplibre-gl';
 import { GeojsonDataLayerProps, LegendDefinition } from 'config/types';
 
 import { LayerData, loadLayerData } from 'context/layers/layer-data';
-import {
-  layerDataSelector,
-  mapSelector,
-} from 'context/mapStateSlice/selectors';
+import { layerDataSelector } from 'context/mapStateSlice/selectors';
 import { getLayerMapId, useMapCallback } from 'utils/map-utils';
 import { opacitySelector } from 'context/opacityStateSlice';
 import { FillLayerSpecification } from 'maplibre-gl';
 import {
   setSelectedGeometry,
-  clearSelectedGeometry,
   opensppStatsSelector,
 } from 'context/opensppStatsSlice';
 
@@ -41,9 +37,8 @@ const GeojsonDataLayer = memo(({ layer, before }: LayersProps) => {
   const dispatch = useDispatch();
   const layerId = getLayerMapId(layer.id);
   const opacityState = useSelector(opacitySelector(layer.id));
-  const map = useSelector(mapSelector);
-  const { selectedGeometry } = useSelector(opensppStatsSelector);
-  const featureClickedRef = useRef(false);
+  const { selectedGeometry, selectedLayerId } =
+    useSelector(opensppStatsSelector);
 
   const layerData = useSelector(layerDataSelector(layer.id)) as
     | LayerData<GeojsonDataLayerProps>
@@ -59,6 +54,7 @@ const GeojsonDataLayer = memo(({ layer, before }: LayersProps) => {
   const onClick = useCallback(
     ({
       dispatch: d,
+      layer: l,
     }: {
       dispatch: any;
       layer: GeojsonDataLayerProps;
@@ -69,11 +65,12 @@ const GeojsonDataLayer = memo(({ layer, before }: LayersProps) => {
         if (!feature || !feature.geometry) {
           return;
         }
-        featureClickedRef.current = true;
         d(
           setSelectedGeometry({
             geometry: feature.geometry,
             properties: feature.properties || {},
+            layerId: getLayerMapId(l.id),
+            layerTitle: l.title || l.id,
           }),
         );
       },
@@ -82,26 +79,6 @@ const GeojsonDataLayer = memo(({ layer, before }: LayersProps) => {
 
   // Register layer click handler
   useMapCallback('click', layerId, layer, onClick);
-
-  // Map-level click handler to clear selection when clicking outside polygons
-  useEffect(() => {
-    if (!map) {
-      return () => {};
-    }
-
-    const handleMapClick = () => {
-      if (featureClickedRef.current) {
-        featureClickedRef.current = false;
-        return;
-      }
-      dispatch(clearSelectedGeometry());
-    };
-
-    map.on('click', handleMapClick);
-    return () => {
-      map.off('click', handleMapClick);
-    };
-  }, [map, dispatch]);
 
   if (!data) {
     return null;
@@ -121,7 +98,7 @@ const GeojsonDataLayer = memo(({ layer, before }: LayersProps) => {
           )}
         />
       </Source>
-      {selectedGeometry && (
+      {selectedGeometry && selectedLayerId === layerId && (
         <Source
           id={`${layerId}-highlight-source`}
           type="geojson"

@@ -3113,7 +3113,7 @@
     "data_field": "level",
     "data_field_type": "text",
     "opacity": 1,
-    "legend_text": "Predicted flood inundation zones (Typhoon Mawar scenario, demo snapshot). Based on Google Research flood forecasting models.",
+    "legend_text": "Predicted flood inundation zones (hypothetical scenario, demo data). Based on Google Research flood forecasting models.",
     "legend": [
       {
         "label": "High",
@@ -3135,7 +3135,7 @@
   "saved_targeting_zones": {
     "title": "Saved targeting zones",
     "type": "geojson_polygon",
-    "data": "https://prism-api.ovio.org/openspp/geofences",
+    "data": "/openspp/geofences",
     "data_field": "geofence_type",
     "opacity": 0.4,
     "legend_text": "Targeting zones saved from Prism or QGIS for program targeting.",

@@ -34,8 +34,8 @@ function simplifyGeometry(geometry: GeoJSON.Geometry): GeoJSON.Geometry {
       });
       return simplified.geometry;
     }
-  } catch {
-    // If simplification fails, use original geometry
+  } catch (err) {
+    console.warn('Geometry simplification failed, using original:', err);
   }
   return geometry;
 }

@@ -117,7 +117,7 @@ function aggregateBreakdown(
 const OpensppStatisticsPanel = memo(() => {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const { status, result, selectedFeatureProperties } =
+  const { status, result, selectedFeatureProperties, selectedLayerTitle } =
     useSelector(opensppStatsSelector);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -133,7 +133,7 @@ const OpensppStatisticsPanel = memo(() => {
     return null;
   }
 
-  const severityLevel = selectedFeatureProperties?.level || 'Unknown';
+  const severityLevel = selectedFeatureProperties?.level;
   const handleClose = () => dispatch(clearSelectedGeometry());
 
   return (
@@ -142,7 +142,8 @@ const OpensppStatisticsPanel = memo(() => {
         <Box className={classes.header}>
           <Box>
             <Typography variant="subtitle1" style={{ fontWeight: 600 }}>
-              Flood Zone — {severityLevel} severity
+              {selectedLayerTitle}
+              {severityLevel ? ` - ${severityLevel} severity` : ''}
             </Typography>
           </Box>
           <IconButton size="small" onClick={handleClose} aria-label="close">
@@ -210,6 +211,9 @@ const OpensppStatisticsPanel = memo(() => {
                 {formatNumber(result.statistics.total_members)} members
                 {result.areas_matched > 0 &&
                   ` across ${formatNumber(result.areas_matched)} barangays`}
+              </Typography>
+              <Typography className={classes.contextLine}>
+                in Camarines Sur
               </Typography>
             </Box>
 
