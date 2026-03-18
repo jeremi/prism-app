@@ -1,10 +1,12 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import {
   Box,
+  Button,
   CircularProgress,
   Divider,
   IconButton,
   Paper,
+  Snackbar,
   Typography,
 } from '@material-ui/core';
 import { Close as CloseIcon } from '@material-ui/icons';
@@ -16,6 +18,7 @@ import {
   BreakdownEntry,
 } from 'context/opensppStatsSlice';
 import { useOpensppStats } from './useOpensppStats';
+import SaveTargetingZoneDialog from './SaveTargetingZoneDialog';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -116,9 +119,15 @@ const OpensppStatisticsPanel = memo(() => {
   const dispatch = useDispatch();
   const { status, result, selectedFeatureProperties } =
     useSelector(opensppStatsSelector);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   // Hook that watches selectedGeometry and triggers API calls
   useOpensppStats();
+
+  const handleSaved = () => {
+    setSnackbarOpen(true);
+  };
 
   if (status === 'idle') {
     return null;
@@ -128,155 +137,179 @@ const OpensppStatisticsPanel = memo(() => {
   const handleClose = () => dispatch(clearSelectedGeometry());
 
   return (
-    <Paper className={classes.root} elevation={3}>
-      <Box className={classes.header}>
-        <Box>
-          <Typography variant="subtitle1" style={{ fontWeight: 600 }}>
-            Flood Zone — {severityLevel} severity
-          </Typography>
-        </Box>
-        <IconButton size="small" onClick={handleClose} aria-label="close">
-          <CloseIcon />
-        </IconButton>
-      </Box>
-
-      {status === 'loading' && (
-        <Box className={classes.centerContent}>
-          <CircularProgress size={32} />
-          <Typography
-            variant="body2"
-            style={{ marginTop: 12 }}
-            color="textSecondary"
-          >
-            Querying OpenSPP...
-          </Typography>
-        </Box>
-      )}
-
-      {status === 'error' && (
-        <Box className={classes.centerContent}>
-          <Typography variant="body2" color="textSecondary">
-            Could not load statistics.
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            Try a smaller area or retry.
-          </Typography>
-        </Box>
-      )}
-
-      {status === 'zero_results' && (
-        <Box className={classes.centerContent}>
-          <Typography variant="body2" color="textSecondary">
-            No registered beneficiaries
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            found in affected barangays.
-          </Typography>
-        </Box>
-      )}
-
-      {status === 'success' && result && (
-        <Box className={classes.content}>
-          <Typography className={classes.demoLabel}>
-            Demo data — not real beneficiaries
-          </Typography>
-
-          <Typography
-            variant="body2"
-            style={{ fontWeight: 500, marginBottom: 2 }}
-          >
-            Program-enrolled households:
-          </Typography>
-          <Typography className={classes.primaryStat}>
-            {formatNumber(result.statistics.enrolled_any_program)}
-          </Typography>
-
-          <Box style={{ marginTop: 8 }}>
-            <Typography className={classes.secondaryStat}>
-              Total registered:{' '}
-              {formatNumber(result.statistics.total_households)} households
-            </Typography>
-            <Typography className={classes.contextLine}>
-              {formatNumber(result.statistics.total_members)} members
-              {result.areas_matched > 0 &&
-                ` across ${formatNumber(result.areas_matched)} barangays`}
+    <>
+      <Paper className={classes.root} elevation={3}>
+        <Box className={classes.header}>
+          <Box>
+            <Typography variant="subtitle1" style={{ fontWeight: 600 }}>
+              Flood Zone — {severityLevel} severity
             </Typography>
           </Box>
-
-          {result.breakdown && (
-            <>
-              <Divider style={{ margin: '12px 0' }} />
-
-              {/* Gender breakdown */}
-              {aggregateBreakdown(result.breakdown, 'gender').length > 0 && (
-                <Box style={{ marginBottom: 8 }}>
-                  <Typography
-                    variant="caption"
-                    color="textSecondary"
-                    style={{
-                      fontWeight: 600,
-                      textTransform: 'uppercase',
-                      letterSpacing: 0.5,
-                    }}
-                  >
-                    By gender
-                  </Typography>
-                  {aggregateBreakdown(result.breakdown, 'gender').map(
-                    ({ label, count }) => (
-                      <Box key={label} className={classes.breakdownRow}>
-                        <Typography className={classes.breakdownLabel}>
-                          {label}
-                        </Typography>
-                        <Typography className={classes.breakdownValue}>
-                          {formatNumber(count)} (
-                          {Math.round(
-                            (count / result.statistics.total_members) * 100,
-                          )}
-                          %)
-                        </Typography>
-                      </Box>
-                    ),
-                  )}
-                </Box>
-              )}
-
-              {/* Age group breakdown */}
-              {aggregateBreakdown(result.breakdown, 'age_group').length > 0 && (
-                <Box style={{ marginBottom: 8 }}>
-                  <Typography
-                    variant="caption"
-                    color="textSecondary"
-                    style={{
-                      fontWeight: 600,
-                      textTransform: 'uppercase',
-                      letterSpacing: 0.5,
-                    }}
-                  >
-                    By age group
-                  </Typography>
-                  {aggregateBreakdown(result.breakdown, 'age_group').map(
-                    ({ label, count }) => (
-                      <Box key={label} className={classes.breakdownRow}>
-                        <Typography className={classes.breakdownLabel}>
-                          {label}
-                        </Typography>
-                        <Typography className={classes.breakdownValue}>
-                          {formatNumber(count)} (
-                          {Math.round(
-                            (count / result.statistics.total_members) * 100,
-                          )}
-                          %)
-                        </Typography>
-                      </Box>
-                    ),
-                  )}
-                </Box>
-              )}
-            </>
-          )}
+          <IconButton size="small" onClick={handleClose} aria-label="close">
+            <CloseIcon />
+          </IconButton>
         </Box>
-      )}
-    </Paper>
+
+        {status === 'loading' && (
+          <Box className={classes.centerContent}>
+            <CircularProgress size={32} />
+            <Typography
+              variant="body2"
+              style={{ marginTop: 12 }}
+              color="textSecondary"
+            >
+              Querying OpenSPP...
+            </Typography>
+          </Box>
+        )}
+
+        {status === 'error' && (
+          <Box className={classes.centerContent}>
+            <Typography variant="body2" color="textSecondary">
+              Could not load statistics.
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              Try a smaller area or retry.
+            </Typography>
+          </Box>
+        )}
+
+        {status === 'zero_results' && (
+          <Box className={classes.centerContent}>
+            <Typography variant="body2" color="textSecondary">
+              No registered beneficiaries
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              found in affected barangays.
+            </Typography>
+          </Box>
+        )}
+
+        {status === 'success' && result && (
+          <Box className={classes.content}>
+            <Typography className={classes.demoLabel}>
+              Demo data — not real beneficiaries
+            </Typography>
+
+            <Typography
+              variant="body2"
+              style={{ fontWeight: 500, marginBottom: 2 }}
+            >
+              Program-enrolled households:
+            </Typography>
+            <Typography className={classes.primaryStat}>
+              {formatNumber(result.statistics.enrolled_any_program)}
+            </Typography>
+
+            <Box style={{ marginTop: 8 }}>
+              <Typography className={classes.secondaryStat}>
+                Total registered:{' '}
+                {formatNumber(result.statistics.total_households)} households
+              </Typography>
+              <Typography className={classes.contextLine}>
+                {formatNumber(result.statistics.total_members)} members
+                {result.areas_matched > 0 &&
+                  ` across ${formatNumber(result.areas_matched)} barangays`}
+              </Typography>
+            </Box>
+
+            {result.breakdown && (
+              <>
+                <Divider style={{ margin: '12px 0' }} />
+
+                {/* Gender breakdown */}
+                {aggregateBreakdown(result.breakdown, 'gender').length > 0 && (
+                  <Box style={{ marginBottom: 8 }}>
+                    <Typography
+                      variant="caption"
+                      color="textSecondary"
+                      style={{
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: 0.5,
+                      }}
+                    >
+                      By gender
+                    </Typography>
+                    {aggregateBreakdown(result.breakdown, 'gender').map(
+                      ({ label, count }) => (
+                        <Box key={label} className={classes.breakdownRow}>
+                          <Typography className={classes.breakdownLabel}>
+                            {label}
+                          </Typography>
+                          <Typography className={classes.breakdownValue}>
+                            {formatNumber(count)} (
+                            {Math.round(
+                              (count / result.statistics.total_members) * 100,
+                            )}
+                            %)
+                          </Typography>
+                        </Box>
+                      ),
+                    )}
+                  </Box>
+                )}
+
+                {/* Age group breakdown */}
+                {aggregateBreakdown(result.breakdown, 'age_group').length >
+                  0 && (
+                  <Box style={{ marginBottom: 8 }}>
+                    <Typography
+                      variant="caption"
+                      color="textSecondary"
+                      style={{
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: 0.5,
+                      }}
+                    >
+                      By age group
+                    </Typography>
+                    {aggregateBreakdown(result.breakdown, 'age_group').map(
+                      ({ label, count }) => (
+                        <Box key={label} className={classes.breakdownRow}>
+                          <Typography className={classes.breakdownLabel}>
+                            {label}
+                          </Typography>
+                          <Typography className={classes.breakdownValue}>
+                            {formatNumber(count)} (
+                            {Math.round(
+                              (count / result.statistics.total_members) * 100,
+                            )}
+                            %)
+                          </Typography>
+                        </Box>
+                      ),
+                    )}
+                  </Box>
+                )}
+              </>
+            )}
+
+            <Button
+              variant="outlined"
+              color="primary"
+              fullWidth
+              style={{ marginTop: 16 }}
+              onClick={() => setDialogOpen(true)}
+            >
+              Save as targeting zone
+            </Button>
+          </Box>
+        )}
+      </Paper>
+      <SaveTargetingZoneDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        onSaved={handleSaved}
+      />
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={4000}
+        onClose={() => setSnackbarOpen(false)}
+        message="Targeting zone saved to OpenSPP"
+      />
+    </>
   );
 });
 
