@@ -42,6 +42,7 @@ from requests import get
 
 from .geotiff_from_stac_api import get_geotiff
 from .models import AlertsModel, StatsModel, UserInfoPydanticModel
+from .openspp import router as openspp_router
 
 logging.basicConfig(
     format="%(asctime)s %(levelname)-8s %(message)s",
@@ -71,6 +72,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(openspp_router)
 
 alert_db = AlertsDataBase()
 
