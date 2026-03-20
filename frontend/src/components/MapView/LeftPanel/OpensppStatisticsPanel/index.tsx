@@ -29,7 +29,7 @@ const useStyles = makeStyles((theme: Theme) =>
       width: 380,
       maxHeight: 'calc(100vh - 56px)',
       overflowY: 'auto',
-      zIndex: 1200,
+      zIndex: 1400,
       borderRadius: '8px 0 0 8px',
     },
     header: {
@@ -100,6 +100,9 @@ function aggregateBreakdown(
   const aggregated: Record<string, { label: string; count: number }> = {};
 
   Object.values(breakdown).forEach(entry => {
+    if (!entry.labels) {
+      return;
+    }
     const dim = entry.labels[dimension];
     if (!dim) {
       return;
