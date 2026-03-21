@@ -618,6 +618,62 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 - **Mapping** Uses [MapLibre](https://maplibre.org/maplibre-gl-js-docs/api/). The app supports Maptiler and Mapbox styles. To use Mapbox styles, you will need to create a token and add it as `REACT_APP_MAPBOX_TOKEN` in a `.env` file at the root folder. Then specify your style url using `REACT_APP_DEFAULT_STYLE`.
 - **WFP authentication** Uses [msal](https://github.com/AzureAD/microsoft-authentication-library-for-js). You need to include within your .env file the variables `REACT_APP_OAUTH_CLIENT_ID`, `REACT_APP_OAUTH_AUTHORITY` and `REACT_APP_OAUTH_REDIRECT_URI`. Also, set the `WFPAuthRequired` flag within the country prism.json file
 
+## OpenSPP Integration
+
+PRISM can connect to an [OpenSPP](https://openspp.org) instance to display beneficiary statistics for selected flood polygons and save targeting zones back to OpenSPP. This powers the anticipatory action demo: a program officer clicks a flood inundation polygon, sees how many registered beneficiaries are in the affected area, and saves the area as a targeting zone to trigger a cash transfer.
+
+### How it works
+
+```
+Browser → Prism frontend (localhost:3001)
+             ↓  /openspp/*
+         Prism API backend (localhost:8000)
+             ↓  OAuth + proxy
+         OpenSPP GIS API (localhost:18887)
+```
+
+The API backend holds the OpenSPP credentials and proxies all requests. The frontend never touches credentials directly.
+
+### Configuration
+
+Two `.env` files are required (both are gitignored):
+
+**`prism-app/.env`** — read by the FastAPI backend:
+
+```
+OPENSPP_BASE_URL=http://localhost:18887
+OPENSPP_CLIENT_ID=your_client_id
+OPENSPP_CLIENT_SECRET=your_client_secret
+```
+
+**`prism-app/frontend/.env`** — read by Vite:
+
+```
+REACT_APP_COUNTRY=philippines
+REACT_APP_API_URL=http://localhost:8000
+```
+
+`REACT_APP_API_URL` points the frontend at the local backend. If omitted, API calls fall back to `https://prism-api.ovio.org`, which does not have the OpenSPP routes.
+
+### Running the Philippines demo
+
+Start the API backend (from the repo root):
+
+```bash
+make api
+```
+
+Start the frontend:
+
+```bash
+cd frontend
+yarn start
+```
+
+Open [http://localhost:3000](http://localhost:3000) (or the next available port if 3000 is taken).
+
+Enable the **Flood Inundation Prediction** layer, click a flood polygon to query OpenSPP beneficiary statistics, and use **Save as targeting zone** to persist the polygon back to OpenSPP.
+
 ### Developing the frontend
 
 The following commands should get you a local development instance of the frontend:

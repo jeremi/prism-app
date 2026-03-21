@@ -101,6 +101,40 @@ The instance will need to have read/write access to S3. Make sure it has the nec
 - `lat_max`, max latitude (to define the bounding box of the geotiff).
 - `long_max`, max longitude (to define the bounding box of the geotiff).
 
+### `/openspp/spatial-statistics` (POST)
+
+Proxy to the OpenSPP `spatial-statistics` OGC Process. Given a GeoJSON polygon geometry, returns aggregate beneficiary counts for registered beneficiaries whose barangay centroid falls within the polygon.
+
+Request body:
+```json
+{ "geometry": { "type": "Polygon", "coordinates": [...] } }
+```
+
+Returns the process result directly if synchronous, or `{"job_id": "..."}` if the server responds asynchronously (HTTP 201).
+
+### `/openspp/jobs/{job_id}` (GET)
+
+Poll the status of an async `spatial-statistics` job. Returns the job result when `status` is `successful`.
+
+### `/openspp/geofences` (GET)
+
+Returns saved targeting zones from OpenSPP as a GeoJSON FeatureCollection. Features have a `geofence_type` property (`hazard_zone`, `targeting_area`, `service_area`, `custom`).
+
+### `/openspp/geofences` (POST)
+
+Create a new targeting zone in OpenSPP. Accepts a GeoJSON Feature with at minimum `name` and `geofence_type` properties.
+
+### `/openspp/geofences/{id}` (PUT)
+
+Replace an existing targeting zone by ID.
+
+**OpenSPP credentials** are read from the environment:
+- `OPENSPP_BASE_URL` — base URL of the OpenSPP instance
+- `OPENSPP_CLIENT_ID` — OAuth2 client ID
+- `OPENSPP_CLIENT_SECRET` — OAuth2 client secret
+
+The backend acquires and caches a Bearer token via `POST {OPENSPP_BASE_URL}/api/v2/spp/oauth/token` and attaches it to all proxied requests.
+
 ## Development
 
 To run the api locally, run:
