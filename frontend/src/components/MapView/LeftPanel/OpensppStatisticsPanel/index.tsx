@@ -86,8 +86,11 @@ const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
-function formatNumber(n: number): string {
-  return n.toLocaleString();
+function formatStat(value: number | string): string {
+  if (typeof value === 'string') {
+    return value;
+  }
+  return value.toLocaleString();
 }
 
 function aggregateBreakdown(
@@ -100,7 +103,7 @@ function aggregateBreakdown(
   const aggregated: Record<string, { label: string; count: number }> = {};
 
   Object.values(breakdown).forEach(entry => {
-    if (!entry.labels) {
+    if (entry.suppressed || !entry.labels || typeof entry.count !== 'number') {
       return;
     }
     const dim = entry.labels[dimension];
@@ -115,6 +118,15 @@ function aggregateBreakdown(
   });
 
   return Object.values(aggregated).sort((a, b) => b.count - a.count);
+}
+
+function hasSuppressionInBreakdown(
+  breakdown: Record<string, BreakdownEntry> | null,
+): boolean {
+  if (!breakdown) {
+    return false;
+  }
+  return Object.values(breakdown).some(entry => entry.suppressed);
 }
 
 const OpensppStatisticsPanel = memo(() => {
@@ -202,18 +214,18 @@ const OpensppStatisticsPanel = memo(() => {
               Program-enrolled households:
             </Typography>
             <Typography className={classes.primaryStat}>
-              {formatNumber(result.statistics.enrolled_any_program)}
+              {formatStat(result.statistics.enrolled_any_program)}
             </Typography>
 
             <Box style={{ marginTop: 8 }}>
               <Typography className={classes.secondaryStat}>
                 Total registered:{' '}
-                {formatNumber(result.statistics.total_households)} households
+                {formatStat(result.statistics.total_households)} households
               </Typography>
               <Typography className={classes.contextLine}>
-                {formatNumber(result.statistics.total_members)} members
+                {formatStat(result.statistics.total_members)} members
                 {result.areas_matched > 0 &&
-                  ` across ${formatNumber(result.areas_matched)} barangays`}
+                  ` across ${formatStat(result.areas_matched)} barangays`}
               </Typography>
               <Typography className={classes.contextLine}>
                 in Camarines Sur
@@ -225,70 +237,89 @@ const OpensppStatisticsPanel = memo(() => {
                 <Divider style={{ margin: '12px 0' }} />
 
                 {/* Gender breakdown */}
-                {aggregateBreakdown(result.breakdown, 'gender').length > 0 && (
-                  <Box style={{ marginBottom: 8 }}>
-                    <Typography
-                      variant="caption"
-                      color="textSecondary"
-                      style={{
-                        fontWeight: 600,
-                        textTransform: 'uppercase',
-                        letterSpacing: 0.5,
-                      }}
-                    >
-                      By gender
-                    </Typography>
-                    {aggregateBreakdown(result.breakdown, 'gender').map(
-                      ({ label, count }) => (
+                {(() => {
+                  const items = aggregateBreakdown(result.breakdown, 'gender');
+                  if (items.length === 0) {
+                    return null;
+                  }
+                  const total = items.reduce((s, i) => s + i.count, 0);
+                  return (
+                    <Box style={{ marginBottom: 8 }}>
+                      <Typography
+                        variant="caption"
+                        color="textSecondary"
+                        style={{
+                          fontWeight: 600,
+                          textTransform: 'uppercase',
+                          letterSpacing: 0.5,
+                        }}
+                      >
+                        By gender
+                      </Typography>
+                      {items.map(({ label, count }) => (
                         <Box key={label} className={classes.breakdownRow}>
                           <Typography className={classes.breakdownLabel}>
                             {label}
                           </Typography>
                           <Typography className={classes.breakdownValue}>
-                            {formatNumber(count)} (
-                            {Math.round(
-                              (count / result.statistics.total_members) * 100,
-                            )}
-                            %)
+                            {formatStat(count)}
+                            {total > 0 &&
+                              ` (${Math.round((count / total) * 100)}%)`}
                           </Typography>
                         </Box>
-                      ),
-                    )}
-                  </Box>
-                )}
+                      ))}
+                    </Box>
+                  );
+                })()}
 
                 {/* Age group breakdown */}
-                {aggregateBreakdown(result.breakdown, 'age_group').length >
-                  0 && (
-                  <Box style={{ marginBottom: 8 }}>
-                    <Typography
-                      variant="caption"
-                      color="textSecondary"
-                      style={{
-                        fontWeight: 600,
-                        textTransform: 'uppercase',
-                        letterSpacing: 0.5,
-                      }}
-                    >
-                      By age group
-                    </Typography>
-                    {aggregateBreakdown(result.breakdown, 'age_group').map(
-                      ({ label, count }) => (
+                {(() => {
+                  const items = aggregateBreakdown(
+                    result.breakdown,
+                    'age_group',
+                  );
+                  if (items.length === 0) {
+                    return null;
+                  }
+                  const total = items.reduce((s, i) => s + i.count, 0);
+                  return (
+                    <Box style={{ marginBottom: 8 }}>
+                      <Typography
+                        variant="caption"
+                        color="textSecondary"
+                        style={{
+                          fontWeight: 600,
+                          textTransform: 'uppercase',
+                          letterSpacing: 0.5,
+                        }}
+                      >
+                        By age group
+                      </Typography>
+                      {items.map(({ label, count }) => (
                         <Box key={label} className={classes.breakdownRow}>
                           <Typography className={classes.breakdownLabel}>
                             {label}
                           </Typography>
                           <Typography className={classes.breakdownValue}>
-                            {formatNumber(count)} (
-                            {Math.round(
-                              (count / result.statistics.total_members) * 100,
-                            )}
-                            %)
+                            {formatStat(count)}
+                            {total > 0 &&
+                              ` (${Math.round((count / total) * 100)}%)`}
                           </Typography>
                         </Box>
-                      ),
-                    )}
-                  </Box>
+                      ))}
+                    </Box>
+                  );
+                })()}
+
+                {hasSuppressionInBreakdown(result.breakdown) && (
+                  <Typography
+                    variant="caption"
+                    color="textSecondary"
+                    style={{ fontStyle: 'italic', display: 'block' }}
+                  >
+                    Some categories hidden for privacy. Percentages may not
+                    total 100%.
+                  </Typography>
                 )}
               </>
             )}

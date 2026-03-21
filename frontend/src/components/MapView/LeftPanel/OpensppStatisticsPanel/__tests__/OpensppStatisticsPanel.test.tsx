@@ -136,4 +136,165 @@ describe('OpensppStatisticsPanel', () => {
     );
     expect(screen.getByText('Flood Affected Areas')).toBeInTheDocument();
   });
+
+  it('shows privacy note when breakdown has suppressed entries', () => {
+    const resultWithSuppression: SpatialStatsResult = {
+      ...mockStatsResult,
+      breakdown: {
+        '2|adult': {
+          count: 65,
+          statistics: {},
+          labels: {
+            gender: { value: '2', display: 'Female' },
+            age_group: { value: 'adult', display: 'Adult (18-59)' },
+          },
+        },
+        '1|adult': {
+          count: 71,
+          statistics: {},
+          labels: {
+            gender: { value: '1', display: 'Male' },
+            age_group: { value: 'adult', display: 'Adult (18-59)' },
+          },
+        },
+        '1|under_5': {
+          count: '<5',
+          suppressed: true,
+          statistics: {},
+        },
+      },
+    };
+    const store = buildStore({
+      status: 'success',
+      result: resultWithSuppression,
+      selectedLayerTitle: 'Test Layer',
+    });
+    render(
+      <Provider store={store}>
+        <OpensppStatisticsPanel />
+      </Provider>,
+    );
+    expect(
+      screen.getByText(
+        'Some categories hidden for privacy. Percentages may not total 100%.',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('does not show privacy note when no entries are suppressed', () => {
+    const resultNoSuppression: SpatialStatsResult = {
+      ...mockStatsResult,
+      breakdown: {
+        '2|adult': {
+          count: 65,
+          statistics: {},
+          labels: {
+            gender: { value: '2', display: 'Female' },
+            age_group: { value: 'adult', display: 'Adult (18-59)' },
+          },
+        },
+        '1|adult': {
+          count: 71,
+          statistics: {},
+          labels: {
+            gender: { value: '1', display: 'Male' },
+            age_group: { value: 'adult', display: 'Adult (18-59)' },
+          },
+        },
+      },
+    };
+    const store = buildStore({
+      status: 'success',
+      result: resultNoSuppression,
+      selectedLayerTitle: 'Test Layer',
+    });
+    render(
+      <Provider store={store}>
+        <OpensppStatisticsPanel />
+      </Provider>,
+    );
+    expect(
+      screen.queryByText(
+        'Some categories hidden for privacy. Percentages may not total 100%.',
+      ),
+    ).not.toBeInTheDocument();
+  });
+
+  it('handles suppressed total_members by hiding percentages', () => {
+    const resultSuppressedTotal: SpatialStatsResult = {
+      ...mockStatsResult,
+      statistics: {
+        ...mockStatsResult.statistics,
+        total_members: '<5' as any,
+      },
+      breakdown: {
+        '1|adult': {
+          count: '<5',
+          suppressed: true,
+          statistics: {},
+        },
+      },
+    };
+    const store = buildStore({
+      status: 'success',
+      result: resultSuppressedTotal,
+      selectedLayerTitle: 'Test Layer',
+    });
+    const { container } = render(
+      <Provider store={store}>
+        <OpensppStatisticsPanel />
+      </Provider>,
+    );
+    // total_members should render as the suppressed string "<5"
+    expect(container.textContent).toContain('<5 members');
+    // No breakdown percentage values should appear (e.g., "52%")
+    // since the only breakdown entry is suppressed.
+    // The privacy note contains "100%" so we match numeric percentages
+    // like "(52%)" specifically.
+    expect(container.textContent).not.toMatch(/\(\d+%\)/);
+  });
+
+  it('computes percentages from dimension totals, not total_members', () => {
+    // Female=65 + Male=71 = 136 total for gender dimension.
+    // total_members=450 (from mockStatsResult) is intentionally different
+    // to prove we use the dimension sum, not total_members.
+    // Expected: Female 65/136 = 48%, Male 71/136 = 52%
+    const resultWithBreakdown: SpatialStatsResult = {
+      ...mockStatsResult,
+      breakdown: {
+        '2|adult': {
+          count: 65,
+          statistics: {},
+          labels: {
+            gender: { value: '2', display: 'Female' },
+            age_group: { value: 'adult', display: 'Adult (18-59)' },
+          },
+        },
+        '1|adult': {
+          count: 71,
+          statistics: {},
+          labels: {
+            gender: { value: '1', display: 'Male' },
+            age_group: { value: 'adult', display: 'Adult (18-59)' },
+          },
+        },
+      },
+    };
+    const store = buildStore({
+      status: 'success',
+      result: resultWithBreakdown,
+      selectedLayerTitle: 'Test Layer',
+    });
+    const { container } = render(
+      <Provider store={store}>
+        <OpensppStatisticsPanel />
+      </Provider>,
+    );
+    // Percentages should be based on 65+71=136, not total_members=450
+    expect(container.textContent).toContain('65 (48%)');
+    expect(container.textContent).toContain('71 (52%)');
+    // Verify NOT using total_members (65/450=14%, 71/450=16%)
+    expect(container.textContent).not.toContain('14%');
+    expect(container.textContent).not.toContain('16%');
+  });
 });

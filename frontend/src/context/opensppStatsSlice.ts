@@ -1,11 +1,14 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { RootState } from './store';
 
-// Types matching the OpenSPP spatial-statistics API response
+// Types matching the OpenSPP spatial-statistics API response.
+// When k-anonymity suppression is active, count becomes a string (e.g. "<5")
+// and labels are stripped.
 export interface BreakdownEntry {
-  count: number;
+  count: number | string;
+  suppressed?: boolean;
   statistics: Record<string, any>;
-  labels: Record<string, { value: string; display: string }>;
+  labels?: Record<string, { value: string; display: string }>;
 }
 
 export interface SpatialStatsResult {
@@ -13,17 +16,17 @@ export interface SpatialStatsResult {
   query_method: string;
   areas_matched: number;
   statistics: {
-    total_households: number;
-    total_members: number;
-    pwd_members: number;
-    enrolled_any_program: number;
+    total_households: number | string;
+    total_members: number | string;
+    pwd_members: number | string;
+    enrolled_any_program: number | string;
     _grouped: Record<
       string,
       Record<
         string,
         {
           label: string;
-          value: number;
+          value: number | string;
           format: string;
           suppressed: boolean;
         }
