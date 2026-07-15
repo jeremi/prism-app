@@ -272,6 +272,15 @@ export function registerDynamicLayer(key: string, layer: LayerType): void {
   (LayerDefinitions as Record<string, LayerType>)[key] = layer;
 }
 
+/**
+ * Return the subset of the given layer ids that are not present in
+ * LayerDefinitions. Reads the live map at call time so layers added via
+ * registerDynamicLayer are recognized as valid.
+ */
+export function getInvalidLayerIds(layerIds: string[]): string[] {
+  return layerIds.filter(layerId => !(layerId in LayerDefinitions));
+}
+
 export function getBoundaryLayers(): BoundaryLayerProps[] {
   return Object.values(LayerDefinitions)
     .filter((layer): layer is BoundaryLayerProps => layer.type === 'boundary')

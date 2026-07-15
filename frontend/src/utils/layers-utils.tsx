@@ -15,6 +15,7 @@ import {
   AALayerIds,
   LayerDefinitions,
   getBoundaryLayerSingleton,
+  getInvalidLayerIds,
   isAnticipatoryActionLayer,
   isWindowedDates,
 } from 'config/utils';
@@ -341,12 +342,12 @@ const useLayers = () => {
     [serverAvailableDates],
   );
 
-  const layerDefinitionIds = useMemo(() => Object.keys(LayerDefinitions), []);
-
-  // Check for invalid layer ids.
+  // Check for invalid layer ids against the live LayerDefinitions map, so
+  // layers registered at runtime (e.g., discovered OpenSPP collections) are
+  // recognized as valid.
   const invalidLayersIds = useMemo(
-    () => urlLayerIds.filter(layerId => !layerDefinitionIds.includes(layerId)),
-    [layerDefinitionIds, urlLayerIds],
+    () => getInvalidLayerIds(urlLayerIds),
+    [urlLayerIds],
   );
 
   // Adds missing layers to existing map instance
